@@ -1,0 +1,53 @@
+{
+    "hotel": {
+      "name": "Happy Paws Pet Hotel",
+      "tagline": "A Home Away From Home for Your Pets",
+      "logo": "/logo-happy-paws.svg",
+      "description": "Happy Paws Pet Hotel offers a luxurious and safe environment for your pets, ensuring they receive the best care while you're away."
+    },
+    "services": [
+      {
+        "name": "Luxury Pet Suites",
+        "description": "Spacious and comfortable suites for your pets with personalized care.",
+        "price_range": "$50 - $200 per night"
+      },
+      {
+        "name": "Daycare Services",
+        "description": "Supervised play and socialization for pets during the day.",
+        "price_range": "$30 - $80 per day"
+      },
+      {
+        "name": "Grooming & Spa",
+        "description": "Professional grooming and spa treatments to keep your pet fresh.",
+        "price_range": "$40 - $100 per session"
+      },
+      {
+        "name": "Veterinary Care",
+        "description": "On-site veterinary services for check-ups and emergencies.",
+        "price_range": "$50 - $250 per visit"
+      }
+    ],
+    "accommodations": [
+      {
+        "type": "Standard Room",
+        "features": ["Cozy bedding", "Daily meals", "Playtime included"],
+        "price_per_night": "$50"
+      },
+      {
+        "type": "Deluxe Suite",
+        "features": ["Spacious room", "Private play area", "24/7 supervision"],
+        "price_per_night": "$120"
+      },
+      {
+        "type": "VIP Villa",
+        "features": ["Luxury bedding", "Personal caregiver", "Unlimited playtime"],
+        "price_per_night": "$200"
+      }
+    ],
+    "contact": {
+      "email": "info@happypawshotel.com",
+      "phone": "+1 345 678 901",
+      "address": "456 Pet Haven Avenue, Pet City, USA"
+    }
+  }
+  
