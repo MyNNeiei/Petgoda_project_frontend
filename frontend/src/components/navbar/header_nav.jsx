@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import Image from "next/image"
-import { UserCircle } from "lucide-react"
-import { useState } from "react"
+import Link from "next/link";
+import Image from "next/image";
+import { UserCircle } from "lucide-react";
+import { useState } from "react";
 
 export default function HeaderNavbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -29,8 +29,8 @@ export default function HeaderNavbar() {
               <Link href="/about" className="text-gray-900 hover:text-gray-600 px-3 py-2 text-sm font-medium">
                 About
               </Link>
-              <Link href="/services" className="text-gray-900 hover:text-gray-600 px-3 py-2 text-sm font-medium">
-                Services
+              <Link href="/hotels" className="text-gray-900 hover:text-gray-600 px-3 py-2 text-sm font-medium">
+                Hotels
               </Link>
               <Link href="/contact" className="text-gray-900 hover:text-gray-600 px-3 py-2 text-sm font-medium">
                 Contact
@@ -72,10 +72,10 @@ export default function HeaderNavbar() {
                 About
               </Link>
               <Link
-                href="/services"
+                href="/hotels"
                 className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-gray-600"
               >
-                Services
+                Hotel
               </Link>
               <Link href="/contact" className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-gray-600">
                 Contact
