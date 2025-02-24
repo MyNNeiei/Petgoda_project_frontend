@@ -1,5 +1,5 @@
 import "./globals.css";
-import HeaderNavbar from "@/components/navbar/header_nav";
+import Navbar from "../components/navbar/headernav";
 
 import { Mali } from "next/font/google";
 const mali = Mali({
@@ -17,7 +17,7 @@ export default function RootLayout(props) {
   return (
     <html lang="en">
       <body className={mali.className}>
-        <HeaderNavbar />
+        <Navbar />
           {props.children}
       </body>
     </html>

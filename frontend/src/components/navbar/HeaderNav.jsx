@@ -5,7 +5,7 @@ import Image from "next/image";
 import { UserCircle } from "lucide-react";
 import { useState } from "react";
 
-export default function HeaderNavbar() {
+export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
