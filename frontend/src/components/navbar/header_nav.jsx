@@ -40,10 +40,12 @@ export default function HeaderNavbar() {
 
           {/* User Icon */}
           <div className="flex items-center">
-            <button type="button" className="p-1 rounded-full text-gray-900 hover:text-gray-600 focus:outline-none">
-              <span className="sr-only">View profile</span>
-              <UserCircle className="h-6 w-6" />
-            </button>
+            <Link href="/login/" passHref>
+              <button type="button" className="p-1 rounded-full text-gray-900 hover:text-gray-600 focus:outline-none">
+                <span className="sr-only">View profile</span>
+                <UserCircle className="h-6 w-6" />
+              </button>
+            </Link>
           </div>
 
           {/* Mobile menu button */}
@@ -87,4 +89,3 @@ export default function HeaderNavbar() {
     </nav>
   )
 }
-
