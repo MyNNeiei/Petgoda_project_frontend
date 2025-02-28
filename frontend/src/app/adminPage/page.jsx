@@ -9,6 +9,8 @@ import "datatables.net-responsive";
 import { Sniglet } from "next/font/google";
 import './styles.css';
 import { HomeIcon } from '@heroicons/react/24/outline';
+import Link from 'next/link';
+import Image from 'next/image';
 
 const sniglet = Sniglet({
   subsets: ["latin"],
@@ -73,7 +75,12 @@ const DataTable = () => {
       <div id="hs-sidebar-basic-usage" className="hs-overlay [--auto-close:lg] lg:block lg:translate-x-0 lg:end-auto lg:bottom-0 w-64 hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform h-full hidden fixed top-0 start-0 bottom-0 z-[60] bg-white border-e border-gray-200 dark:bg-neutral-800 dark:border-neutral-700" role="dialog" tabIndex={-1} aria-label="Sidebar">
         <div className="relative flex flex-col h-full max-h-full">
           <header className="p-4 flex justify-between items-center gap-x-2">
-            <a className="flex-none font-semibold text-xl text-black focus:outline-none focus:opacity-80 dark:text-white" href="#" aria-label="Brand">Brand</a>
+          <Link href="/" className="flex-shrink-0">
+            <Image
+              src="/logo-petloga-lightmodel.svg" alt="Petgoda Logo" width={220} height={100} priority
+              className="h-12 w-auto"
+            />
+          </Link>
 
             <div className="lg:hidden -me-2">
               <button type="button" className="flex justify-center items-center gap-x-3 size-6 bg-white border border-gray-200 text-sm text-gray-600 hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:pointer-events-none focus:outline-none focus:bg-gray-100 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700 dark:hover:text-neutral-200 dark:focus:text-neutral-200" data-hs-overlay="#hs-sidebar-basic-usage">
