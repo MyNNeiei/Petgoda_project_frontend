@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Petgoda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: "Mali", serif;
+        }
+
+        body {
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("3.jpg") center/cover no-repeat;
+            filter: blur(5px);
+            z-index: -1;
+        }
+
+        .form-container {
+            background: linear-gradient(to top right, #f9a743, #f9db5f);
+            border: 5px solid white;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            max-width: 450px;
+            padding: 20px;
+        }
+
+        .input-field {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .input-field:focus {
+            border: 2px solid #243946;
+            box-shadow: 0 0 5px rgba(36, 57, 70, 0.5);
+        }
+
+        .register-btn {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .register-btn:hover {
+            background-color: #1a2b36;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center min-h-screen">
+    <div class="form-container w-full text-center">
+        <h2 class="text-3xl font-bold text-[#243946] mb-4">Register</h2>
+        <form class="space-y-3 grid grid-cols-2 gap-3" x-data="{ username: '', email: '', password1: '', password2: '', firstname: '', lastname: '', birthdate: '', gender: '', role: '', phone: '', profileImg: null }">
+            <input x-model="username" type="text" class="input-field col-span-2 w-full p-2 rounded-lg border focus:outline-none" placeholder="Username" required>
+            <input x-model="email" type="email" class="input-field col-span-2 w-full p-2 rounded-lg border focus:outline-none" placeholder="Email" required>
+            <input x-model="password1" type="password" class="input-field w-full p-2 rounded-lg border focus:outline-none" placeholder="Password" required>
+            <input x-model="password2" type="password" class="input-field w-full p-2 rounded-lg border focus:outline-none" placeholder="Confirm Password" required>
+            <input x-model="firstname" type="text" class="input-field w-full p-2 rounded-lg border focus:outline-none" placeholder="First Name" required>
+            <input x-model="lastname" type="text" class="input-field w-full p-2 rounded-lg border focus:outline-none" placeholder="Last Name" required>
+            <input x-model="birthdate" type="date" class="input-field col-span-2 w-full p-2 rounded-lg border focus:outline-none" required>
+            <select x-model="gender" class="input-field w-full p-2 rounded-lg border focus:outline-none" required>
+                <option value="" disabled selected>Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+            </select>
+            <select x-model="role" class="input-field w-full p-2 rounded-lg border focus:outline-none" required>
+                <option value="" disabled selected>Role</option>
+                <option value="petowner">Pet Owner</option>
+                <option value="hoteladmin">Hotel Admin</option>
+            </select>
+            <input x-model="phone" type="tel" class="input-field col-span-2 w-full p-2 rounded-lg border focus:outline-none" placeholder="Phone Number" required>
+            <input @change="profileImg = $event.target.files[0]" type="file" class="input-field col-span-2 w-full p-2 rounded-lg border focus:outline-none">
+            <button type="submit" class="register-btn col-span-2 w-full p-3 bg-[#243946] text-white rounded-lg font-bold transition-all">Register</button>
+        </form>
+        <p class="mt-3 text-sm">Already have an account? <a href="login.html" class="text-[#243946] font-bold">Login</a></p>
+    </div>
+</body>
+
+</html>

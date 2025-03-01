@@ -1,7 +1,5 @@
 import Image from "next/image";
-import "./globals.css";
-import Footer from "../components/ui/footer";
-import CardHotel from "../components/ui/cardhotel";
+import Footer from "@/components/ui/footer";
 export default function Home() {
   return (
     <div className="min-h-screen">
