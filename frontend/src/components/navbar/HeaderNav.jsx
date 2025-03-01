@@ -1,131 +1,120 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import Image from "next/image";
-import { UserCircle } from "lucide-react";
-import { useState } from "react";
+import { useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { Menu, User } from "lucide-react"
+import Image from "next/image"
+
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
 export default function Navbar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isStaff, setIsStaff] = useState(false) // Add state for staff status
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/api/logout/", {
+        method: "POST",
+        credentials: "include",
+      })
+
+      if (res.ok) {
+        setIsLoggedIn(false)
+        router.refresh()
+      }
+    } catch (error) {
+      console.error("Logout failed:", error)
+    }
+  }
+
+  const NavLinks = () => (
+    <>
+      <Link href="/" className="hover:text-primary transition-colors">
+        Home
+      </Link>
+      <Link href="/about" className="hover:text-primary transition-colors">
+        About
+      </Link>
+      <Link href="/hotels" className="hover:text-primary transition-colors">
+        Hotels
+      </Link>
+      <Link href="/contact" className="hover:text-primary transition-colors">
+        Contact
+      </Link>
+    </>
+  )
+
+  const AuthLinks = () => (
+    <>
+      {isLoggedIn ? (
+        <>
+          {isStaff && (
+            <Link
+              href="/admin-dashboard"
+              className="inline-flex items-center justify-center rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 text-sm font-medium transition-colors"
+            >
+              Admin Dashboard
+            </Link>
+          )}
+          <Link
+            href="/profile"
+            className="inline-flex items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground px-4 py-2 text-sm font-medium transition-colors"
+          >
+            <User className="w-4 h-4 mr-2" />
+            Profile
+          </Link>
+          <Button onClick={handleLogout} variant="default" className="text-sm">
+            Logout
+          </Button>
+        </>
+      ) : (
+        <Link
+          href="/login"
+          className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 text-sm font-medium transition-colors"
+        >
+          Login
+        </Link>
+      )}
+    </>
+  )
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white drop-shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
-            <Image
-              src="/logo-petloga1.svg"
-              alt="Petgoda Logo"
-              width={220}
-              height={100}
-              priority
-              className="h-12 w-auto"
-            />
-          </Link>
+    <nav className="flex items-center justify-between px-6 py-4 border-b">
+      <Link href="/" className="text-xl font-bold">
+        <Image src="/logo-petloga.svg" alt="Petgoda Logo" width={220} height={100} priority className="h-12 w-auto" />
+      </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden sm:block">
-            <div className="flex space-x-12">
-              <Link
-                href="/"
-                className="text-gray-900 hover:text-gray-600 px-3 py-2 text-sm font-medium"
-              >
-                Home
-              </Link>
-              <Link
-                href="/about"
-                className="text-gray-900 hover:text-gray-600 px-3 py-2 text-sm font-medium"
-              >
-                About
-              </Link>
-              <Link
-                href="/hotels"
-                className="text-gray-900 hover:text-gray-600 px-3 py-2 text-sm font-medium"
-              >
-                Hotels
-              </Link>
-              <Link
-                href="/contact"
-                className="text-gray-900 hover:text-gray-600 px-3 py-2 text-sm font-medium"
-              >
-                Contact
-              </Link>
-            </div>
-          </div>
-
-          {/* User Icon */}
-          <div className="flex items-center">
-            <Link href="/profile">
-              {" "}
-              {/* Link to the profile page */}
-              <button
-                type="button"
-                className="p-1 rounded-full text-gray-900 hover:text-gray-600 focus:outline-none"
-              >
-                <span className="sr-only">View profile</span>
-                <UserCircle className="h-6 w-6" />
-              </button>
-            </Link>
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="sm:hidden flex items-center">
-            <button
-              type="button"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-900 hover:text-gray-600 focus:outline-none"
-            >
-              <span className="sr-only">Open main menu</span>
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile menu */}
-        {isMobileMenuOpen && (
-          <div className="sm:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              <Link
-                href="/"
-                className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-gray-600"
-              >
-                Home
-              </Link>
-              <Link
-                href="/about"
-                className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-gray-600"
-              >
-                About
-              </Link>
-              <Link
-                href="/hotels"
-                className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-gray-600"
-              >
-                Hotel
-              </Link>
-              <Link
-                href="/contact"
-                className="block px-3 py-2 text-base font-medium text-gray-900 hover:text-gray-600"
-              >
-                Contact
-              </Link>
-            </div>
-          </div>
-        )}
+      {/* Desktop Navigation */}
+      <div className="hidden md:flex md:items-center md:gap-8">
+        <NavLinks />
       </div>
+
+      {/* Desktop Auth */}
+      <div className="hidden md:flex md:items-center md:gap-4">
+        <AuthLinks />
+      </div>
+
+      {/* Mobile Menu */}
+      <Sheet>
+        <SheetTrigger asChild className="md:hidden">
+          <Button variant="ghost" size="icon">
+            <Menu className="h-6 w-6" />
+            <span className="sr-only">Toggle menu</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+          <nav className="flex flex-col gap-4">
+            <NavLinks />
+            <div className="flex flex-col gap-4 mt-4">
+              <AuthLinks />
+            </div>
+          </nav>
+        </SheetContent>
+      </Sheet>
     </nav>
-  );
+  )
 }
+

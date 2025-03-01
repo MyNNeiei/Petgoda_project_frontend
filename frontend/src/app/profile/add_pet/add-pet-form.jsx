@@ -1,312 +1,224 @@
-// "use client"
+"use client"
 
-// import { useState } from "react"
-// // import { zodResolver } from "@/hookform/resolvers/zod"
-// import { useForm } from "react-hook-form"
-// import { zodResolver, z } from "zod"
-// import { Button } from "@/components/ui/button"
-// import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-// import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-// import { Input } from "@/components/ui/input"
-// import { Textarea } from "@/components/ui/textarea"
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-// import { toast } from "@/hooks/use-toast"
-// import { PlusCircle } from "lucide-react"
-// // import { createPet } from "@/utils/api"
+import { useState } from "react"
+import PropTypes from "prop-types"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+import { createPet } from "@/utils/apiPets"
+import { PlusCircle } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
 
-// const petFormSchema = z.object({
-//   name: z.string().min(2, {
-//     message: "Pet name must be at least 2 characters.",
-//   }),
-//   breed: z.string().min(2, {
-//     message: "Breed must be at least 2 characters.",
-//   }),
-//   age: z.string().min(1, {
-//     message: "Age is required",
-//   }),
-//   weight: z.string().min(1, {
-//     message: "Weight is required",
-//   }),
-//   color: z.string().min(2, {
-//     message: "Color must be at least 2 characters.",
-//   }),
-//   about: z.string().min(10, {
-//     message: "About section must be at least 10 characters.",
-//   }),
-//   vaccinated: z.string(),
-//   neutered: z.string(),
-//   emergency_contact: z.string().min(10, {
-//     message: "Emergency contact number is required",
-//   }),
-// })
+export function AddPetForm({ profileId, onSuccess }) {
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-// export function AddPetForm({ profileId, onSuccess }) {
-//   const [open, setOpen] = useState(false)
-//   const [isSubmitting, setIsSubmitting] = useState(false)
-//   const [imagePreview, setImagePreview] = useState(null)
+  async function handleSubmit(event) {
+    event.preventDefault()
+    setLoading(true)
 
-//   // const form = useForm({
-//   //   resolver: zodResolver(petFormSchema),
-//   //   defaultValues: {
-//   //     name: "",
-//   //     breed: "",
-//   //     age: "",
-//   //     weight: "",
-//   //     color: "",
-//   //     about: "",
-//   //     vaccinated: "no",
-//   //     neutered: "no",
-//   //     emergency_contact: "",
-//   //   },
-//   // })
+    try {
+      const formData = new FormData(event.currentTarget)
+      formData.append("profile", profileId.toString())
 
-//   async function onSubmit(data) {
-//     try {
-//       setIsSubmitting(true)
-//       const formData = new FormData()
+      await createPet(formData)
+      toast({
+        title: "Success",
+        description: "Pet added successfully",
+      })
+      setOpen(false)
+      onSuccess()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add pet",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
-//       // Add form fields to FormData
-//       Object.entries(data).forEach(([key, value]) => {
-//         formData.append(key, value)
-//       })
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2 bg-[#D2C8BC] hover:bg-[#c4bab0] text-black">
+          <PlusCircle className="h-4 w-4" />
+          Add Pet
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[525px]" style={{ backgroundColor: "#D2C8BC" }}>
+        <DialogHeader className="space-y-3">
+          <DialogTitle className="text-2xl text-black">Add New Pet</DialogTitle>
+          <DialogDescription className="text-gray-700">
+            Fill in your pet's information. All fields marked with * are required.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="grid gap-6 py-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="name" className="font-medium text-black">
+                Name *
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                placeholder="Pet's name"
+                className="bg-white/90 border-gray-300 text-black placeholder:text-gray-500"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="breed" className="font-medium text-black">
+                Breed *
+              </Label>
+              <Input
+                id="breed"
+                name="breed"
+                placeholder="Pet's breed"
+                className="bg-white/90 border-gray-300 text-black placeholder:text-gray-500"
+                required
+              />
+            </div>
+          </div>
 
-//       // Add profile ID
-//       formData.append("profile", profileId)
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-2">
+              <Label htmlFor="age" className="font-medium text-black">
+                Age *
+              </Label>
+              <Input
+                id="age"
+                name="age"
+                type="number"
+                placeholder="Years"
+                className="bg-white/90 border-gray-300 text-black placeholder:text-gray-500"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="weight" className="font-medium text-black">
+                Weight (kg) *
+              </Label>
+              <Input
+                id="weight"
+                name="weight"
+                type="number"
+                step="0.1"
+                placeholder="0.0"
+                className="bg-white/90 border-gray-300 text-black placeholder:text-gray-500"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="color" className="font-medium text-black">
+                Color *
+              </Label>
+              <Input
+                id="color"
+                name="color"
+                placeholder="Pet's color"
+                className="bg-white/90 border-gray-300 text-black placeholder:text-gray-500"
+                required
+              />
+            </div>
+          </div>
 
-//       // Add image if exists
-//       const fileInput = document.querySelector('input[type="file"]')
-//       if (fileInput?.files?.[0]) {
-//         formData.append("image", fileInput.files[0])
-//       }
+          <div className="grid gap-2">
+            <Label htmlFor="about" className="font-medium text-black">
+              About
+            </Label>
+            <Textarea
+              id="about"
+              name="about"
+              placeholder="Tell us about your pet..."
+              className="bg-white/90 border-gray-300 text-black placeholder:text-gray-500 resize-none min-h-[100px]"
+            />
+          </div>
 
-//       // Convert boolean strings to actual booleans
-//       formData.set("vaccinated", data.vaccinated === "yes")
-//       formData.set("neutered", data.neutered === "yes")
+          <div className="grid gap-2">
+            <Label htmlFor="emergency_contact" className="font-medium text-black">
+              Emergency Contact *
+            </Label>
+            <Input
+              id="emergency_contact"
+              name="emergency_contact"
+              placeholder="Contact information"
+              className="bg-white/90 border-gray-300 text-black placeholder:text-gray-500"
+              required
+            />
+          </div>
 
-//       await createPet(formData)
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-row items-center justify-between rounded-lg border border-gray-300 bg-white/90 p-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="vaccinated" className="font-medium text-black">
+                  Vaccinated
+                </Label>
+                <div className="text-sm text-gray-600">Has your pet been vaccinated?</div>
+              </div>
+              <Switch id="vaccinated" name="vaccinated" />
+            </div>
+            <div className="flex flex-row items-center justify-between rounded-lg border border-gray-300 bg-white/90 p-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="neutered" className="font-medium text-black">
+                  Neutered
+                </Label>
+                <div className="text-sm text-gray-600">Has your pet been neutered?</div>
+              </div>
+              <Switch id="neutered" name="neutered" />
+            </div>
+          </div>
 
-//       toast({
-//         title: "Pet added successfully!",
-//         description: `Added ${data.name} to your profile.`,
-//       })
+          <div className="grid gap-2">
+            <Label htmlFor="image" className="font-medium text-black">
+              Pet Image
+            </Label>
+            <Input
+              id="image"
+              name="image"
+              type="file"
+              accept="image/*"
+              className="bg-white/90 border-gray-300 text-black cursor-pointer file:bg-[#D2C8BC] file:text-black file:border-0"
+            />
+            <p className="text-sm text-gray-600">Supported formats: JPG, PNG, GIF (max 5MB)</p>
+          </div>
 
-//       setOpen(false)
-//       form.reset()
-//       setImagePreview(null)
-//       if (onSuccess) onSuccess()
-//     } catch (error) {
-//       toast({
-//         title: "Error",
-//         description: "Failed to add pet. Please try again.",
-//         variant: "destructive",
-//       })
-//     } finally {
-//       setIsSubmitting(false)
-//     }
-//   }
+          <div className="flex justify-end gap-4 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              className="bg-white text-black border-gray-300 hover:bg-gray-100"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="min-w-[100px] bg-[#D2C8BC] hover:bg-[#c4bab0] text-black"
+            >
+              {loading ? "Adding..." : "Add Pet"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
-//   const handleImageChange = (event) => {
-//     const file = event.target.files?.[0]
-//     if (file) {
-//       const reader = new FileReader()
-//       reader.onloadend = () => {
-//         setImagePreview(reader.result)
-//       }
-//       reader.readAsDataURL(file)
-//     }
-//   }
-
-//   return (
-//     <Dialog open={open} onOpenChange={setOpen}>
-//       <DialogTrigger asChild>
-//         <Button variant="outline" className="gap-2">
-//           <PlusCircle className="h-4 w-4" />
-//           Add Pet
-//         </Button>
-//       </DialogTrigger>
-//       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-//         <DialogHeader>
-//           <DialogTitle>Add New Pet</DialogTitle>
-//           <DialogDescription>Add your pet's information. Click save when you're done.</DialogDescription>
-//         </DialogHeader>
-//         <Form {...form}>
-//           {/* <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6"> */}
-//             <div className="space-y-4">
-//               <FormField
-//                 control={form.control}
-//                 name="name"
-//                 render={({ field }) => (
-//                   <FormItem>
-//                     <FormLabel>Pet Name</FormLabel>
-//                     <FormControl>
-//                       <Input placeholder="Enter pet name" {...field} />
-//                     </FormControl>
-//                     <FormMessage />
-//                   </FormItem>
-//                 )}
-//               />
-
-//               <div className="grid gap-4 md:grid-cols-2">
-//                 <FormField
-//                   control={form.control}
-//                   name="breed"
-//                   render={({ field }) => (
-//                     <FormItem>
-//                       <FormLabel>Breed</FormLabel>
-//                       <FormControl>
-//                         <Input placeholder="Enter breed" {...field} />
-//                       </FormControl>
-//                       <FormMessage />
-//                     </FormItem>
-//                   )}
-//                 />
-
-//                 <FormField
-//                   control={form.control}
-//                   name="age"
-//                   render={({ field }) => (
-//                     <FormItem>
-//                       <FormLabel>Age</FormLabel>
-//                       <FormControl>
-//                         <Input placeholder="Enter age" {...field} />
-//                       </FormControl>
-//                       <FormMessage />
-//                     </FormItem>
-//                   )}
-//                 />
-//               </div>
-
-//               <div className="grid gap-4 md:grid-cols-2">
-//                 <FormField
-//                   control={form.control}
-//                   name="weight"
-//                   render={({ field }) => (
-//                     <FormItem>
-//                       <FormLabel>Weight (lbs)</FormLabel>
-//                       <FormControl>
-//                         <Input placeholder="Enter weight" {...field} />
-//                       </FormControl>
-//                       <FormMessage />
-//                     </FormItem>
-//                   )}
-//                 />
-
-//                 <FormField
-//                   control={form.control}
-//                   name="color"
-//                   render={({ field }) => (
-//                     <FormItem>
-//                       <FormLabel>Color</FormLabel>
-//                       <FormControl>
-//                         <Input placeholder="Enter color" {...field} />
-//                       </FormControl>
-//                       <FormMessage />
-//                     </FormItem>
-//                   )}
-//                 />
-//               </div>
-
-//               <FormField
-//                 control={form.control}
-//                 name="about"
-//                 render={({ field }) => (
-//                   <FormItem>
-//                     <FormLabel>About</FormLabel>
-//                     <FormControl>
-//                       <Textarea placeholder="Tell us about your pet..." {...field} />
-//                     </FormControl>
-//                     <FormMessage />
-//                   </FormItem>
-//                 )}
-//               />
-
-//               <div className="space-y-4">
-//                 <FormLabel>Pet Image</FormLabel>
-//                 <Input type="file" accept="image/*" onChange={handleImageChange} className="cursor-pointer" />
-//                 {imagePreview && (
-//                   <div className="mt-2">
-//                     <img
-//                       src={imagePreview || "/placeholder.svg"}
-//                       alt="Preview"
-//                       className="w-32 h-32 object-cover rounded-lg"
-//                     />
-//                   </div>
-//                 )}
-//               </div>
-
-//               <div className="grid gap-4 md:grid-cols-2">
-//                 <FormField
-//                   control={form.control}
-//                   name="vaccinated"
-//                   render={({ field }) => (
-//                     <FormItem>
-//                       <FormLabel>Vaccinated</FormLabel>
-//                       <Select onValueChange={field.onChange} defaultValue={field.value}>
-//                         <FormControl>
-//                           <SelectTrigger>
-//                             <SelectValue placeholder="Select" />
-//                           </SelectTrigger>
-//                         </FormControl>
-//                         <SelectContent>
-//                           <SelectItem value="yes">Yes</SelectItem>
-//                           <SelectItem value="no">No</SelectItem>
-//                         </SelectContent>
-//                       </Select>
-//                       <FormMessage />
-//                     </FormItem>
-//                   )}
-//                 />
-
-//                 <FormField
-//                   control={form.control}
-//                   name="neutered"
-//                   render={({ field }) => (
-//                     <FormItem>
-//                       <FormLabel>Neutered</FormLabel>
-//                       <Select onValueChange={field.onChange} defaultValue={field.value}>
-//                         <FormControl>
-//                           <SelectTrigger>
-//                             <SelectValue placeholder="Select" />
-//                           </SelectTrigger>
-//                         </FormControl>
-//                         <SelectContent>
-//                           <SelectItem value="yes">Yes</SelectItem>
-//                           <SelectItem value="no">No</SelectItem>
-//                         </SelectContent>
-//                       </Select>
-//                       <FormMessage />
-//                     </FormItem>
-//                   )}
-//                 />
-//               </div>
-
-//               <FormField
-//                 control={form.control}
-//                 name="emergency_contact"
-//                 render={({ field }) => (
-//                   <FormItem>
-//                     <FormLabel>Emergency Contact Number</FormLabel>
-//                     <FormControl>
-//                       <Input placeholder="Enter emergency contact number" {...field} />
-//                     </FormControl>
-//                     <FormMessage />
-//                   </FormItem>
-//                 )}
-//               />
-//             </div>
-
-//             <div className="flex justify-end gap-4">
-//               <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>
-//                 Cancel
-//               </Button>
-//               <Button type="submit" disabled={isSubmitting}>
-//                 {isSubmitting ? "Saving..." : "Save Pet"}
-//               </Button>
-//             </div>
-//           </form>
-//         </Form>
-//       </DialogContent>
-//     </Dialog>
-//   )
-// }
+AddPetForm.propTypes = {
+  profileId: PropTypes.number.isRequired,
+  onSuccess: PropTypes.func.isRequired,
+}
 

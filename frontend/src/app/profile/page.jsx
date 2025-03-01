@@ -7,8 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
 import { Mail, MapPin, Phone, User2 } from "lucide-react"
 import { AddPetForm } from "./add_pet/add-pet-form"
-// import { fetchProfile, fetchPets } from "../../utils/api"
-// import { toast } from "../../components/ui/use-toast"
+import { fetchProfile, fetchPets } from "@/utils/apiPets"
+import { toast } from "@/hooks/use-toast"
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState(null)
@@ -62,7 +62,7 @@ export default function ProfilePage() {
         </TabsList>
 
         <div className="flex justify-end mb-4">
-          {/* <AddPetForm profileId={profile?.id} onSuccess={loadPets} /> */}
+          <AddPetForm profileId={profile?.id} onSuccess={loadPets} />
         </div>
 
         <TabsContent value="person">
@@ -171,7 +171,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <Button variant="outline">Edit Pet Profile</Button>
+                    <Button variant="outline" onClick={() => setIsEditing(true)}>Edit Pet Profile</Button>
                   </div>
                 </CardContent>
               </Card>
