@@ -24,15 +24,19 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
-    }
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "strictNullChecks": true
   },
   "include": [
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "**/*.ts",
-    "**/*.tsx"
-, "src/app/profile/edit/page.jsx"  ],
+    "**/*.tsx",
+    "src/app/profile/edit/page.jsx"
+  ],
   "exclude": [
     "node_modules"
   ]

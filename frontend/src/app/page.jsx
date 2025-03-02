@@ -1,8 +1,10 @@
 import Image from "next/image";
 import Footer from "@/components/ui/footer";
+import Navbar from "@/components/navbar/headernav";
 export default function Home() {
   return (
     <div className="min-h-screen">
+      <Navbar />
       <div className="bg-[#D2C8BC] px-4 py-10 w-100 mx-auto">
         <span className="flex flex-rows items-center justify-center py-5 mt-10">
           <h1 className="text-7xl font-bold text-center mb-8">Hotel</h1>
@@ -74,7 +76,7 @@ export default function Home() {
         </div>
         <div className="my-20 px-20">
           <h1 className="text-5xl font-bold text-start">Recommend</h1>
-          <CardHotel />
+          {/* <CardHotel /> */}
         </div>
       </div>
       <Footer />

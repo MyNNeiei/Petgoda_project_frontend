@@ -51,7 +51,7 @@ export default function Navbar() {
     <>
       {isLoggedIn ? (
         <>
-          {isStaff && (
+          {setIsStaff && (
             <Link
               href="/admin-dashboard"
               className="inline-flex items-center justify-center rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 text-sm font-medium transition-colors"

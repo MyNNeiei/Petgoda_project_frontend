@@ -1,13 +1,36 @@
 "use client";
-import { useEffect } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import axiosInstance from "@/utils/axios";
 import "./styles.css";
 // import Image from "next/image";
 
 export default function LoginPage() {
-    // useEffect(() => {
-    //     // นำเข้า JavaScript
-    //     import("./scripts.js");
-    // }, []);
+    const [formData, setFormData] = useState({ username: "", password: "" });
+    const [error, setError] = useState(null);
+    const router = useRouter();
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError(null); // Reset previous errors
+
+        try {
+            const response = await axiosInstance.post("/api/login/", formData);
+            const token = response.data.token;
+
+            // ✅ Store token in localStorage
+            localStorage.setItem("token", token);
+
+            // ✅ Redirect to the profile page
+            router.push("/profile");
+        } catch (err) {
+            setError(err.response?.data?.error || "Invalid login credentials.");
+        }
+    };
 
     return (
         <main className="center">
@@ -44,19 +67,36 @@ export default function LoginPage() {
                 </div>
             </div>
             <div className="login">
-                <label>
-                    <div className="fa fa-phone"></div>
-                    <input className="username" type="text" autoComplete="on" placeholder="username" />
-                </label>
-                <label>
-                    <div className="fa fa-commenting"></div>
-                    <input className="password" type="password" autoComplete="off" placeholder="password" />
-                </label>
-                <button className="login-button">Login</button>
-                <p className="mt-4 text-sm">
-                    Don't have an account?{" "}
-                    <a href="/register/" className="text-[#243946] font-bold">Register</a>
-                </p>
+            {error && <p className="text-red-500">{error}</p>}
+                <form onSubmit={handleSubmit}>
+                    <label className="block text-gray-700 text-sm font-medium">
+                        <input 
+                            type="text"
+                            name="username"
+                            value={formData.username}
+                            onChange={handleChange}
+                            autoComplete="on"
+                            placeholder="Username"
+                            required
+                        />
+                    </label>
+                    <label className="block text-gray-700 text-sm font-medium">
+                        <input
+                            type="password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            autoComplete="off"
+                            placeholder="Password"
+                            required
+                        />
+                    </label>
+                    <button type="submit" className="login-button">Login</button>
+                    <p className="text-sm text-center mt-2">
+                        Don't have an account?{" "}
+                        <a href="/register/" className="text-[#243946] font-semibold hover:underline">Register</a>
+                    </p>
+                </form>
             </div>
         </main>
     );

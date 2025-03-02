@@ -55,6 +55,7 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto my-10 py-10 px-4">
+      <Navbar />
       <Tabs defaultValue="person" className="max-w-4xl mx-auto">
         <TabsList className="grid w-full grid-cols-2 mb-8">
           <TabsTrigger value="person">Person Profile</TabsTrigger>
