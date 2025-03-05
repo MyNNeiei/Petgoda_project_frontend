@@ -1,21 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
-
+import Navbar from '@/components/navbar/headernav';
 export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-100">
-      <nav className="bg-gray-900 text-white p-4 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <span className="text-xl font-bold">🐾 PetStay</span>
-        </div>
-        <div className="flex gap-4">
-          <Link href="/" className="hover:text-yellow-400">Home</Link>
-          <Link href="/dashboard" className="hover:text-yellow-400">Dashboard</Link>
-          <Link href="/booking-schedule" className="hover:text-yellow-400">Booking Schedule</Link>
-          <Link href="/settings" className="hover:text-yellow-400">Settings</Link>
-        </div>
-      </nav>
-
+      <Navbar />
       <div className="p-8">
         <h1 className="text-2xl font-bold mb-6">Your Hotels</h1>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 justify-center">

@@ -1,124 +1,117 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Button } from "../../components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
-import { Input } from "../../components/ui/input"
-import { Label } from "../../components/ui/label"
-import { Textarea } from "../../components/ui/textarea"
-import { fetchProfile, updateProfile } from "@/utils/axios"
+import { useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast"
+import axiosInstance from "@/utils/axios";
 
-export default function EditProfileForm({ profileId, onSuccess, onCancel }) {
+export function EditProfileDialog({ profile, onSuccess }) {
+  const [isOpen, setIsOpen] = useState(false)
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    location: "",
-    about: "",
+    name: profile?.name || "",
+    email: profile?.email || "",
+    phone: profile?.phone || "",
+    address: profile?.address || "",
   })
-  const [loading, setLoading] = useState(false)
 
-  // Fetch profile data and prefill form
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const profileData = await fetchProfile(profileId)
-        setFormData({
-          name: profileData.name || "",
-          email: profileData.email || "",
-          phone: profileData.phone || "",
-          location: profileData.location || "",
-          about: profileData.about || "",
-        })
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to load profile",
-          variant: "destructive",
-        })
-      }
-    }
-    loadProfile()
-  }, [profileId])
-
-  // Handle form changes
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prevData) => ({ ...prevData, [name]: value }))
-  }
-
-  // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
     try {
-      await updateProfile(profileId, formData)
+      const formDataToSend = new FormData();
+      formDataToSend.append("first_name", formData.firstName);
+      formDataToSend.append("last_name", formData.lastName);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("phone_number", formData.phone);
+      formDataToSend.append("address", formData.address);
+
+      if (formData.avatar instanceof File) {
+        formDataToSend.append("profile_picture", formData.avatar);
+      }
+
+      const response = await axiosInstance.put("api/profile/", formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        withCredentials: true,
+      });
+
+      setProfile(response.data);
       toast({
         title: "Success",
-        description: "Profile updated successfully!",
-        variant: "success",
-      })
-      onSuccess() // Reload profile after update
+        description: "Profile updated successfully",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+      setIsEditing(false);
+      // Update preview image after successful update
+      setPreviewImage(response.data.profile_picture || DEFAULT_AVATAR); // update the preview image from the data returned from the backend
     } catch (error) {
+      console.error("Error updating profile", error);
       toast({
         title: "Error",
         description: "Failed to update profile",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
     }
-  }
+  };
 
   return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>Edit Profile</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">Edit Profile</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Profile</DialogTitle>
+        </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name */}
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
-            <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            />
           </div>
-
-          {/* Email */}
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
           </div>
-
-          {/* Phone */}
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="phone">Phone</Label>
-            <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} />
+            <Input
+              id="phone"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
           </div>
-
-          {/* Location */}
-          <div>
-            <Label htmlFor="location">Location</Label>
-            <Input id="location" name="location" value={formData.location} onChange={handleChange} />
+          <div className="space-y-2">
+            <Label htmlFor="address">Address</Label>
+            <Input
+              id="address"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            />
           </div>
-
-          {/* About */}
-          <div>
-            <Label htmlFor="about">About</Label>
-            <Textarea id="about" name="about" value={formData.about} onChange={handleChange} />
-          </div>
-
-          {/* Submit and Cancel Buttons */}
-          <div className="flex justify-end space-x-3">
-            <Button type="button" variant="outline" onClick={onCancel}>
+          <div className="flex justify-end gap-4">
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Updating..." : "Save Changes"}
-            </Button>
+            <Button type="submit">Save Changes</Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -10,14 +10,14 @@ export default function RegisterPage() {
     const [formData, setFormData] = useState({
         username: '',
         email: '',
-        password1: '',
-        password2: '',
-        firstname: '',
-        lastname: '',
-        birthdate: '',
+        password: '',
+        confirm_password: '',
+        first_name: '',
+        last_name: '',
+        birth_date: '',
         gender: '',
         role: '',
-        phone: '',
+        phone_number: '',
         profileImg: null,
     });
 
@@ -42,11 +42,16 @@ export default function RegisterPage() {
         setSuccess(null);
 
         // ✅ Validate Passwords Match
-        if (formData.password1 !== formData.password2) {
+        if (formData.password !== formData.confirm_password) {
             setError("Passwords do not match!");
             return;
         }
 
+        const dataToSend = new FormData();
+        Object.keys(formData).forEach((key) => {
+            dataToSend.append(key, formData[key]);
+        });
+        console.log(Object.fromEntries(dataToSend.entries()));
         try {
             const dataToSend = new FormData(); // ✅ Use FormData for file upload
             Object.keys(formData).forEach((key) => {
@@ -63,10 +68,10 @@ export default function RegisterPage() {
 
             console.log("Registration successful:", response.data);
             setSuccess("Registration successful! Redirecting...");
-            
+
             // ✅ Redirect to login page after 2 seconds
             setTimeout(() => {
-                router.push("api/login");
+                router.push("/login");
             }, 2000);
         } catch (error) {
             console.log("Registration error:", error.response?.data || error.message);
@@ -85,8 +90,8 @@ export default function RegisterPage() {
                 <input name="email" type="email" className="input-field col-span-2 w-full p-2 rounded-lg border focus:outline-none" placeholder="Email" required onChange={handleChange} />
                 <input name="password" type="password" className="input-field w-full p-2 rounded-lg border focus:outline-none" placeholder="Password" required onChange={handleChange} />
                 <input name="confirm_password" type="password" className="input-field w-full p-2 rounded-lg border focus:outline-none" placeholder="Confirm Password" required onChange={handleChange} />
-                <input name="firstname" type="text" className="input-field w-full p-2 rounded-lg border focus:outline-none" placeholder="First Name" required onChange={handleChange} />
-                <input name="lastname" type="text" className="input-field w-full p-2 rounded-lg border focus:outline-none" placeholder="Last Name" required onChange={handleChange} />
+                <input name="first_name" type="text" className="input-field w-full p-2 rounded-lg border focus:outline-none" placeholder="First Name" required onChange={handleChange} />
+                <input name="last_name" type="text" className="input-field w-full p-2 rounded-lg border focus:outline-none" placeholder="Last Name" required onChange={handleChange} />
                 <input name="birth_date" type="date" className="input-field col-span-2 w-full p-2 rounded-lg border focus:outline-none" required onChange={handleChange} />
                 <select name="gender" className="input-field w-full p-2 rounded-lg border focus:outline-none" required onChange={handleChange}>
                     <option value="">Gender</option>
