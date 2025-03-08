@@ -37,7 +37,7 @@ export default function CardHotel({ hotel }) {
           <CardTitle className="text-xl font-bold text-[#886551]">{hotel.name}</CardTitle>
           <div className="flex items-center">
             <Star className="h-4 w-4 text-yellow-500 mr-1" />
-            <span className="text-sm font-semibold">{hotel.rating.toFixed(1)}</span>
+            <span className="text-sm font-semibold">{hotel.rating}</span>
           </div>
         </div>
         <div className="flex items-center text-sm text-gray-500 mt-1">
@@ -50,16 +50,16 @@ export default function CardHotel({ hotel }) {
         <CardDescription className="text-sm line-clamp-2 mb-3">{hotel.description}</CardDescription>
 
         <div className="flex flex-wrap gap-1 mt-2">
-          {hotel.amenities.slice(0, 3).map((amenity, index) => (
+          {/* {hotel.amenities.slice(0, 3).map((amenity, index) => (
             <Badge key={index} variant="outline" className="bg-[#f8f5f2] text-[#886551]">
               {amenity}
             </Badge>
-          ))}
-          {hotel.amenities.length > 3 && (
+          ))} */}
+          {/* {hotel.amenities.length > 3 && (
             <Badge variant="outline" className="bg-[#f8f5f2] text-[#886551]">
               +{hotel.amenities.length - 3} more
             </Badge>
-          )}
+          )} */}
         </div>
       </CardContent>
 
