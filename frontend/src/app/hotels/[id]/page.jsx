@@ -1,476 +1,664 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/router"
-import Head from "next/head"
-import Link from "next/link"
-import { Star, MapPin } from "lucide-react"
+import { useParams, useRouter } from "next/navigation"
+import axiosInstance from "@/utils/axios"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import Navbar from "@/components/navbar/headernav"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { toast } from "@/hooks/use-toast"
+import { Loader2, Calendar, Users, PawPrintIcon as Paw, CreditCard, Check } from "lucide-react"
+import { format } from "date-fns"
+import { Calendar as CalendarComponent } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
 
-export default function HotelDetailPage() {
+export default function BookHotelPage() {
+  const { id } = useParams()
   const router = useRouter()
-  const { id } = router.query
   const [hotel, setHotel] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState("")
-  const [activeImage, setActiveImage] = useState(0)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [booking, setBooking] = useState(false)
+  const [error, setError] = useState(null)
+  const [activeTab, setActiveTab] = useState("details")
+
+  // Booking state
+  const [selectedRoom, setSelectedRoom] = useState(null)
+  const [checkInDate, setCheckInDate] = useState(null)
+  const [checkOutDate, setCheckOutDate] = useState(null)
+  const [petDetails, setPetDetails] = useState({
+    petName: "",
+    petType: "dog",
+    petSize: "small",
+    petBreed: "",
+    specialNeeds: "",
+  })
+  const [ownerDetails, setOwnerDetails] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  })
+  const [paymentMethod, setPaymentMethod] = useState("credit_card")
 
   useEffect(() => {
-    // Check if user is authenticated
-    const checkAuth = async () => {
+    const fetchHotel = async () => {
       try {
-        const response = await fetch("/api/auth/user")
-        setIsAuthenticated(response.ok)
+        if (!id) return
+
+        const response = await axiosInstance.get(`/api/hotels/${id}`)
+        setHotel(response.data.hotel)
       } catch (err) {
-        console.error("Error checking authentication:", err)
-        setIsAuthenticated(false)
-      }
-    }
-
-    checkAuth()
-  }, [])
-
-  useEffect(() => {
-    // Only fetch hotel data when we have the ID from the URL
-    if (!id) return
-
-    const fetchHotelData = async () => {
-      try {
-        setIsLoading(true)
-
-        // In a real app, this would be a call to your Next.js API route that communicates with Django
-        const response = await fetch(`/api/hotels/${id}`)
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch hotel details")
-        }
-
-        const data = await response.json()
-        setHotel(data)
-      } catch (err) {
-        console.error("Error fetching hotel data:", err)
-        setError("Failed to load hotel details. Please try again.")
+        console.error("Error fetching hotel details:", err)
+        setError("Failed to load hotel details.")
+        toast({
+          title: "Error",
+          description: "Failed to load hotel details.",
+          variant: "destructive",
+        })
       } finally {
-        setIsLoading(false)
+        setLoading(false)
       }
     }
 
-    fetchHotelData()
+    fetchHotel()
   }, [id])
 
-  const handleBookNow = () => {
-    if (isAuthenticated) {
-      router.push(`/hotels/${id}/booking`)
-    } else {
-      router.push(`/login?redirect=/hotels/${id}/booking`)
+  const handleBooking = async (e) => {
+    e.preventDefault()
+
+    if (!selectedRoom) {
+      toast({
+        title: "Error",
+        description: "Please select a room to book.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!checkInDate || !checkOutDate) {
+      toast({
+        title: "Error",
+        description: "Please select check-in and check-out dates.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setBooking(true)
+
+    try {
+      const bookingData = {
+        hotelId: id,
+        roomId: selectedRoom.id || selectedRoom.tempId,
+        checkInDate: format(checkInDate, "yyyy-MM-dd"),
+        checkOutDate: format(checkOutDate, "yyyy-MM-dd"),
+        petDetails,
+        ownerDetails,
+        paymentMethod,
+      }
+
+      await axiosInstance.post(`/api/bookings/create`, bookingData)
+
+      toast({
+        title: "Success",
+        description: "Your booking has been confirmed!",
+      })
+
+      router.push("/bookings/confirmation")
+    } catch (err) {
+      console.error("Error creating booking:", err)
+      toast({
+        title: "Error",
+        description: "Failed to create booking. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setBooking(false)
     }
   }
 
-  if (isLoading) {
+  const calculateTotalPrice = () => {
+    if (!selectedRoom || !checkInDate || !checkOutDate) return 0
+
+    const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24))
+    return selectedRoom.price_per_night * nights
+  }
+
+  const isRoomAvailable = (room) => {
+    // This would typically check against existing bookings
+    // For now, we'll just use the availability_status field
+    return room.availability_status === "available"
+  }
+
+  const isDateDisabled = (date) => {
+    // Example logic to disable past dates
+    return date < new Date()
+  }
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex justify-center items-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-2">Loading hotel details...</p>
       </div>
     )
   }
 
-  if (error || !hotel) {
+  if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex justify-center items-center">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
-          <p className="text-gray-700 mb-6">{error || "Hotel not found"}</p>
-          <Link href="/hotels">
-            <a className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md">
-              Back to Hotels
-            </a>
-          </Link>
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md">
+          <p className="text-center">{error}</p>
+          <div className="mt-4 flex justify-center">
+            <Button onClick={() => router.push("/hotels")}>Return to Hotels</Button>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Head>
-        <title>{hotel.name} | PetStay</title>
-        <meta name="description" content={hotel.description} />
-      </Head>
+    <div>
+      <Navbar />
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row gap-8 mb-8">
+          <div className="md:w-2/3">
+            <h1 className="text-3xl font-bold mb-2">{hotel?.name}</h1>
+            <p className="text-muted-foreground mb-4">{hotel?.address}</p>
 
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center">
-            <Link href="/hotels">
-              <a className="text-blue-600 hover:text-blue-800 mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </a>
-            </Link>
-            <div className="flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-blue-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19.44 10c-.79-2.83-3.16-5-6.44-5s-5.65 2.17-6.44 5m12.88 0c.35.63.44 1.3.44 2 0 1.66-.67 3.16-1.76 4.24l-1.45 1.45a5.5 5.5 0 0 1-7.77 0l-1.45-1.45A5.5 5.5 0 0 1 5 12c0-.7.09-1.37.44-2"
+            {hotel?.imgHotel && (
+              <div className="rounded-lg overflow-hidden h-64 md:h-96 mb-6">
+                <img
+                  src={hotel.imgHotel || "/placeholder.svg"}
+                  alt={hotel.name}
+                  className="w-full h-full object-cover"
                 />
-              </svg>
-              <h1 className="text-xl font-bold text-gray-900">PetStay</h1>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">{hotel.name}</h1>
-
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex items-center">
-              <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
-              <span className="ml-1 text-gray-900 font-medium">{hotel.rating}</span>
-              <span className="ml-1 text-gray-500">({hotel.reviews} reviews)</span>
-            </div>
-            <div className="flex items-center text-gray-500">
-              <MapPin className="h-5 w-5" />
-              <span className="ml-1">{hotel.location}</span>
-            </div>
-          </div>
-
-          {/* Image Gallery */}
-          <div className="mb-8">
-            <div className="relative h-[400px] rounded-lg overflow-hidden mb-2">
-              <img
-                src={hotel.images?.[activeImage] || hotel.image || "/placeholder.svg?height=600&width=800"}
-                alt={`${hotel.name} - View ${activeImage + 1}`}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            {hotel.images && hotel.images.length > 1 && (
-              <div className="grid grid-cols-5 gap-2">
-                {hotel.images.map((image, index) => (
-                  <div
-                    key={index}
-                    className={`h-20 rounded-md overflow-hidden cursor-pointer ${activeImage === index ? "ring-2 ring-blue-600" : ""}`}
-                    onClick={() => setActiveImage(index)}
-                  >
-                    <img
-                      src={image || "/placeholder.svg"}
-                      alt={`${hotel.name} - Thumbnail ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
               </div>
             )}
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Left Column - Hotel Details */}
-            <div className="md:col-span-2">
-              <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">About {hotel.name}</h2>
-                <p className="text-gray-700 mb-6">{hotel.description}</p>
+            <div className="prose max-w-none mb-6">
+              <h2 className="text-xl font-semibold mb-2">About this hotel</h2>
+              <p>{hotel?.description}</p>
+            </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Amenities</h3>
-                    <ul className="space-y-2">
-                      {hotel.amenities?.map((amenity, index) => (
-                        <li key={index} className="flex items-center text-gray-700">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 text-green-500 mr-2"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          {amenity}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Pet Types</h3>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {hotel.pet_types?.map((type, index) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                        >
-                          {type}
-                        </span>
-                      ))}
-                    </div>
-
-                    <h3 className="font-semibold text-gray-900 mb-2 mt-4">Policies</h3>
-                    <ul className="space-y-2">
-                      {hotel.policies?.map((policy, index) => (
-                        <li key={index} className="flex items-start text-gray-700">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 text-gray-400 mr-2 mt-0.5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                          {policy}
-                        </li>
-                      ))}
-                      {!hotel.policies && (
-                        <li className="text-gray-700">
-                          Check-in time: 2:00 PM - 6:00 PM
-                          <br />
-                          Check-out time: 10:00 AM - 12:00 PM
-                          <br />
-                          Pets must be up-to-date on vaccinations
-                          <br />
-                          Cancellation policy: Full refund if cancelled 48 hours before check-in
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              {/* Reviews Section */}
-              <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Guest Reviews</h2>
-
-                {hotel.top_reviews ? (
-                  <div className="space-y-6">
-                    {hotel.top_reviews.map((review, index) => (
-                      <div key={index} className="border-b border-gray-200 pb-6 last:border-0 last:pb-0">
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex items-center">
-                            <div className="h-10 w-10 rounded-full bg-gray-200 overflow-hidden mr-3">
-                              {review.user_image ? (
-                                <img
-                                  src={review.user_image || "/placeholder.svg"}
-                                  alt={review.user_name}
-                                  className="h-full w-full object-cover"
-                                />
-                              ) : (
-                                <svg
-                                  className="h-full w-full text-gray-400 p-2"
-                                  fill="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                              )}
-                            </div>
-                            <div>
-                              <h4 className="font-medium text-gray-900">{review.user_name}</h4>
-                              <p className="text-sm text-gray-500">{review.date}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center">
-                            <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                            <span className="ml-1 font-medium">{review.rating}</span>
-                          </div>
-                        </div>
-                        <p className="text-gray-700">{review.comment}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <p className="text-gray-500">No reviews yet. Be the first to review this hotel after your stay!</p>
+            {/* Facilities section */}
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold mb-4">Facilities</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {hotel?.facilities?.has_wifi && (
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>WiFi</span>
                   </div>
                 )}
-
-                <div className="mt-6 text-center">
-                  <a href="#" className="text-blue-600 hover:text-blue-800 font-medium">
-                    View all {hotel.reviews} reviews
-                  </a>
-                </div>
+                {hotel?.facilities?.has_swimming_pool && (
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>Swimming Pool</span>
+                  </div>
+                )}
+                {hotel?.facilities?.has_veterinary_services && (
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>Veterinary Services</span>
+                  </div>
+                )}
+                {hotel?.facilities?.has_grooming_services && (
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>Grooming Services</span>
+                  </div>
+                )}
+                {hotel?.facilities?.has_training_services && (
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>Training Services</span>
+                  </div>
+                )}
+                {hotel?.facilities?.has_playground && (
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>Playground</span>
+                  </div>
+                )}
+                {hotel?.facilities?.has_outdoor_area && (
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>Outdoor Area</span>
+                  </div>
+                )}
+                {hotel?.facilities?.has_pet_friendly_cafe && (
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>Pet-Friendly Cafe</span>
+                  </div>
+                )}
+                {hotel?.facilities?.has_pet_spa && (
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>Pet Spa</span>
+                  </div>
+                )}
               </div>
             </div>
+          </div>
 
-            {/* Right Column - Booking Card */}
-            <div className="md:col-span-1">
-              <div className="bg-white rounded-lg shadow-lg p-6 sticky top-4">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Book Your Pet's Stay</h2>
+          <div className="md:w-1/3">
+            <Card className="sticky top-4">
+              <CardContent className="pt-6">
+                <h2 className="text-xl font-semibold mb-4">Book Your Stay</h2>
 
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-700">Price per night</span>
-                    <span className="text-2xl font-bold text-gray-900">${hotel.price}</span>
-                  </div>
-                  <p className="text-sm text-gray-500">Price is per pet, per night</p>
-                </div>
-
-                <div className="space-y-4 mb-6">
+                <div className="space-y-4">
                   <div>
-                    <label htmlFor="check-in" className="block text-sm font-medium text-gray-700 mb-1">
-                      Check-in Date
-                    </label>
-                    <input
-                      type="date"
-                      id="check-in"
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      min={new Date().toISOString().split("T")[0]}
-                      disabled
-                    />
+                    <Label htmlFor="check-in">Check-in Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal mt-1"
+                          id="check-in"
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {checkInDate ? format(checkInDate, "PPP") : "Select date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <CalendarComponent
+                          mode="single"
+                          selected={checkInDate}
+                          onSelect={setCheckInDate}
+                          disabled={isDateDisabled}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
+
                   <div>
-                    <label htmlFor="check-out" className="block text-sm font-medium text-gray-700 mb-1">
-                      Check-out Date
-                    </label>
-                    <input
-                      type="date"
-                      id="check-out"
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      min={new Date().toISOString().split("T")[0]}
-                      disabled
-                    />
+                    <Label htmlFor="check-out">Check-out Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal mt-1"
+                          id="check-out"
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {checkOutDate ? format(checkOutDate, "PPP") : "Select date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <CalendarComponent
+                          mode="single"
+                          selected={checkOutDate}
+                          onSelect={setCheckOutDate}
+                          disabled={(date) => isDateDisabled(date) || (checkInDate && date <= checkInDate)}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
+
+                  {checkInDate && checkOutDate && (
+                    <div className="bg-muted p-3 rounded-md">
+                      <p className="text-sm font-medium">
+                        {Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24))} nights
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                <button
-                  onClick={handleBookNow}
-                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md focus:outline-none focus:ring-4 focus:ring-blue-300"
-                >
-                  Book Now
-                </button>
-
-                <p className="text-xs text-gray-500 text-center mt-2">
-                  You won't be charged yet. Complete your booking on the next page.
-                </p>
-
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <h3 className="font-medium text-gray-900 mb-2">Why Book with PetStay?</h3>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <svg
-                        className="h-5 w-5 text-green-500 mr-2 mt-0.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span className="text-sm text-gray-700">Verified pet-friendly accommodations</span>
-                    </li>
-                    <li className="flex items-start">
-                      <svg
-                        className="h-5 w-5 text-green-500 mr-2 mt-0.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span className="text-sm text-gray-700">24/7 customer support</span>
-                    </li>
-                    <li className="flex items-start">
-                      <svg
-                        className="h-5 w-5 text-green-500 mr-2 mt-0.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span className="text-sm text-gray-700">Free cancellation up to 48 hours before check-in</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
+                <Button className="w-full mt-4" onClick={() => setActiveTab("rooms")}>
+                  View Available Rooms
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
-      </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-100 py-8 border-t border-gray-200 mt-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-blue-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19.44 10c-.79-2.83-3.16-5-6.44-5s-5.65 2.17-6.44 5m12.88 0c.35.63.44 1.3.44 2 0 1.66-.67 3.16-1.76 4.24l-1.45 1.45a5.5 5.5 0 0 1-7.77 0l-1.45-1.45A5.5 5.5 0 0 1 5 12c0-.7.09-1.37.44-2"
-                  />
-                </svg>
-                <h3 className="text-xl font-bold text-gray-900">PetStay</h3>
+        <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="details">Hotel Details</TabsTrigger>
+            <TabsTrigger value="rooms">Available Rooms</TabsTrigger>
+            <TabsTrigger value="booking" disabled={!selectedRoom}>
+              Booking Details
+            </TabsTrigger>
+            <TabsTrigger value="payment" disabled={!selectedRoom || !checkInDate || !checkOutDate}>
+              Payment
+            </TabsTrigger>
+          </TabsList>
+
+          <form onSubmit={handleBooking}>
+            <TabsContent value="details">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="prose max-w-none">
+                    <h2 className="text-xl font-semibold mb-4">About {hotel?.name}</h2>
+                    <p>{hotel?.description}</p>
+
+                    <h3 className="text-lg font-medium mt-6 mb-2">Contact Information</h3>
+                    <p>
+                      <strong>Phone:</strong> {hotel?.phone}
+                    </p>
+                    <p>
+                      <strong>Email:</strong> {hotel?.email}
+                    </p>
+                    {hotel?.website && (
+                      <p>
+                        <strong>Website:</strong> {hotel?.website}
+                      </p>
+                    )}
+                    <p>
+                      <strong>Address:</strong> {hotel?.address}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="rooms">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {hotel?.rooms?.map((room, index) => (
+                  <Card
+                    key={index}
+                    className={`overflow-hidden ${selectedRoom?.id === room.id ? "ring-2 ring-primary" : ""}`}
+                  >
+                    <div className="aspect-video overflow-hidden">
+                      {room.images && room.images.length > 0 ? (
+                        <img
+                          src={room.images[0].image || "/placeholder.svg"}
+                          alt={room.roomname}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center">
+                          <p className="text-muted-foreground">No image available</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <CardContent className="pt-6">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-lg font-semibold">{room.roomname}</h3>
+                        <Badge variant={isRoomAvailable(room) ? "outline" : "secondary"}>
+                          {isRoomAvailable(room) ? "Available" : "Unavailable"}
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-sm mb-4">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                          <span>Max Pets: {room.max_pets}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Paw className="h-4 w-4 text-muted-foreground" />
+                          <span>Pet Size: {room.allow_pet_size}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center mt-4">
+                        <p className="font-semibold text-lg">
+                          ${room.price_per_night}{" "}
+                          <span className="text-sm font-normal text-muted-foreground">/ night</span>
+                        </p>
+                        <Button
+                          type="button"
+                          variant={selectedRoom?.id === room.id ? "default" : "outline"}
+                          disabled={!isRoomAvailable(room)}
+                          onClick={() => setSelectedRoom(room)}
+                        >
+                          {selectedRoom?.id === room.id ? "Selected" : "Select"}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {(!hotel?.rooms || hotel.rooms.length === 0) && (
+                  <div className="col-span-full text-center py-12 border rounded-md border-dashed text-muted-foreground">
+                    No rooms available at this hotel.
+                  </div>
+                )}
               </div>
-              <p className="text-gray-600 mb-4">
-                Find the perfect accommodation for your furry friends while you're away.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4 text-gray-900">Quick Links</h4>
-              <ul className="space-y-2">
-                <li>
-                  <a href="#" className="text-gray-600 hover:text-gray-900">
-                    About Us
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-600 hover:text-gray-900">
-                    Pet Care Tips
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-600 hover:text-gray-900">
-                    Become a Partner
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="text-gray-600 hover:text-gray-900">
-                    FAQs
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4 text-gray-900">Contact Us</h4>
-              <ul className="space-y-2 text-gray-600">
-                <li>Email: support@petstay.com</li>
-                <li>Phone: (123) 456-7890</li>
-                <li>Address: 123 Pet Street, Pawville, CA 94103</li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-200 mt-8 pt-8 text-center text-gray-600">
-            <p>&copy; {new Date().getFullYear()} PetStay. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+
+              {selectedRoom && (
+                <div className="mt-6 flex justify-end">
+                  <Button type="button" onClick={() => setActiveTab("booking")}>
+                    Continue to Booking Details
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="booking">
+              <Card>
+                <CardContent className="pt-6 space-y-6">
+                  <div>
+                    <h2 className="text-xl font-semibold mb-4">Pet Details</h2>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="grid gap-2">
+                        <Label htmlFor="petName">Pet Name</Label>
+                        <Input
+                          id="petName"
+                          value={petDetails.petName}
+                          onChange={(e) => setPetDetails({ ...petDetails, petName: e.target.value })}
+                          required
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label htmlFor="petBreed">Pet Breed</Label>
+                        <Input
+                          id="petBreed"
+                          value={petDetails.petBreed}
+                          onChange={(e) => setPetDetails({ ...petDetails, petBreed: e.target.value })}
+                          required
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label htmlFor="petType">Pet Type</Label>
+                        <Select
+                          value={petDetails.petType}
+                          onValueChange={(value) => setPetDetails({ ...petDetails, petType: value })}
+                        >
+                          <SelectTrigger id="petType">
+                            <SelectValue placeholder="Select pet type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="dog">Dog</SelectItem>
+                            <SelectItem value="cat">Cat</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label htmlFor="petSize">Pet Size</Label>
+                        <Select
+                          value={petDetails.petSize}
+                          onValueChange={(value) => setPetDetails({ ...petDetails, petSize: value })}
+                        >
+                          <SelectTrigger id="petSize">
+                            <SelectValue placeholder="Select pet size" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="small">Small</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="large">Large</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid gap-2 md:col-span-2">
+                        <Label htmlFor="specialNeeds">Special Needs or Requirements</Label>
+                        <Textarea
+                          id="specialNeeds"
+                          rows={3}
+                          value={petDetails.specialNeeds}
+                          onChange={(e) => setPetDetails({ ...petDetails, specialNeeds: e.target.value })}
+                          placeholder="Any dietary restrictions, medications, or special care instructions"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h2 className="text-xl font-semibold mb-4">Owner Details</h2>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="grid gap-2">
+                        <Label htmlFor="ownerName">Full Name</Label>
+                        <Input
+                          id="ownerName"
+                          value={ownerDetails.name}
+                          onChange={(e) => setOwnerDetails({ ...ownerDetails, name: e.target.value })}
+                          required
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label htmlFor="ownerPhone">Phone Number</Label>
+                        <Input
+                          id="ownerPhone"
+                          value={ownerDetails.phone}
+                          onChange={(e) => setOwnerDetails({ ...ownerDetails, phone: e.target.value })}
+                          required
+                        />
+                      </div>
+
+                      <div className="grid gap-2 md:col-span-2">
+                        <Label htmlFor="ownerEmail">Email</Label>
+                        <Input
+                          id="ownerEmail"
+                          type="email"
+                          value={ownerDetails.email}
+                          onChange={(e) => setOwnerDetails({ ...ownerDetails, email: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("rooms")}>
+                    Back to Rooms
+                  </Button>
+                  <Button type="button" onClick={() => setActiveTab("payment")}>
+                    Continue to Payment
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="payment">
+              <Card>
+                <CardContent className="pt-6 space-y-6">
+                  <div>
+                    <h2 className="text-xl font-semibold mb-4">Booking Summary</h2>
+                    <div className="bg-muted p-4 rounded-md space-y-3">
+                      <div className="flex justify-between">
+                        <span>Hotel:</span>
+                        <span className="font-medium">{hotel?.name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Room:</span>
+                        <span className="font-medium">{selectedRoom?.roomname}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Check-in:</span>
+                        <span className="font-medium">{checkInDate ? format(checkInDate, "PPP") : ""}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Check-out:</span>
+                        <span className="font-medium">{checkOutDate ? format(checkOutDate, "PPP") : ""}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Nights:</span>
+                        <span className="font-medium">
+                          {Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24))}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Pet:</span>
+                        <span className="font-medium">
+                          {petDetails.petName} ({petDetails.petType})
+                        </span>
+                      </div>
+                      <div className="border-t pt-2 mt-2 flex justify-between">
+                        <span className="font-semibold">Total:</span>
+                        <span className="font-semibold">${calculateTotalPrice()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h2 className="text-xl font-semibold mb-4">Payment Method</h2>
+                    <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
+                      <div className="flex items-center space-x-2 border p-3 rounded-md">
+                        <RadioGroupItem value="credit_card" id="credit_card" />
+                        <Label htmlFor="credit_card" className="flex items-center">
+                          <CreditCard className="mr-2 h-4 w-4" />
+                          Credit Card
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2 border p-3 rounded-md">
+                        <RadioGroupItem value="paypal" id="paypal" />
+                        <Label htmlFor="paypal">PayPal</Label>
+                      </div>
+                      <div className="flex items-center space-x-2 border p-3 rounded-md">
+                        <RadioGroupItem value="pay_at_hotel" id="pay_at_hotel" />
+                        <Label htmlFor="pay_at_hotel">Pay at Hotel</Label>
+                      </div>
+                    </RadioGroup>
+
+                    {paymentMethod === "credit_card" && (
+                      <div className="mt-4 space-y-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="cardName">Name on Card</Label>
+                          <Input id="cardName" placeholder="John Doe" required />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="cardNumber">Card Number</Label>
+                          <Input id="cardNumber" placeholder="1234 5678 9012 3456" required />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="expiryDate">Expiry Date</Label>
+                            <Input id="expiryDate" placeholder="MM/YY" required />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="cvv">CVV</Label>
+                            <Input id="cvv" placeholder="123" required />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button type="button" variant="outline" onClick={() => setActiveTab("booking")}>
+                    Back to Booking Details
+                  </Button>
+                  <Button type="submit" disabled={booking}>
+                    {booking ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      "Confirm Booking"
+                    )}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+          </form>
+        </Tabs>
+      </div>
     </div>
   )
 }
