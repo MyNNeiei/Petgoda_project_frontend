@@ -1,26 +1,39 @@
-import axiosInstance from "@/utils/axios";
+import axiosInstance from "./axios";
 
 /** ✅ Fetch Profile */
-export async function fetchProfile(id) {
+export async function fetchProfile() {
   try {
-    const response = await axiosInstance.get(`/profiles/${id}/`);
+    console.log("🔍 Fetching profile: /api/profile/");
+
+    const response = await axiosInstance.get("/api/profile/");
+    console.log("✅ Profile data received:", response.data);
+    
     return response.data;
   } catch (error) {
-    console.error("Error fetching profile:", error);
-    throw new Error("Failed to fetch profile. Please try again.");
+    console.error("❌ Error fetching profile:", error.response?.status, error.response?.data);
+    throw new Error("Failed to fetch profile.");
+  }
+}
+export async function updateProfile(formData) {
+  try {
+    const response = await axiosInstance.put(`/profiles/edit/`, formData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    throw new Error(error.response?.data?.message || "Failed to update profile");
   }
 }
 
 /** ✅ Fetch All Pets */
-export async function fetchPets() {
-  try {
-    const response = await axiosInstance.get("/pets/");
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching pets:", error);
-    throw new Error("Failed to fetch pets. Please try again.");
-  }
-}
+// export async function fetchPets() {
+//   try {
+//     const response = await axiosInstance.get("/pets/");
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error fetching pets:", error);
+//     throw new Error("Failed to fetch pets. Please try again.");
+//   }
+// }
 
 /** ✅ Create a New Pet */
 export async function createPet(formData) {
@@ -56,15 +69,6 @@ export async function deletePet(id) {
 }
 
 /** ✅ Update Profile */
-export async function updateProfile(id, formData) {
-  try {
-    const response = await axiosInstance.put(`/profiles/${id}/`, formData);
-    return response.data;
-  } catch (error) {
-    console.error("Error updating profile:", error);
-    throw new Error(error.response?.data?.message || "Failed to update profile");
-  }
-}
 
 /** ✅ Fetch Pets by Profile ID */
 export async function fetchPetsByProfile(profileId) {

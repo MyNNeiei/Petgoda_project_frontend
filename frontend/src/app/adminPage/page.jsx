@@ -21,8 +21,10 @@ const DataTable = () => {
   const [hotelData, setHotelData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reasonData, setReasonData] = useState({});
 
-  // Fetch data from API
+
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -33,6 +35,7 @@ const DataTable = () => {
         setUserData(userResponse.data);
 
         const hotelResponse = await axiosInstance.get("http://127.0.0.1:8000/api/hotels/");
+        console.log("🔄 Loaded Hotel Data:", hotelResponse.data); // ✅ Debugging Reason
         setHotelData(hotelResponse.data);
 
       } catch (error) {
@@ -44,6 +47,7 @@ const DataTable = () => {
 
     fetchData();
   }, []);
+
 
   // Update User Status
   const updateUserStatus = async (userId, status) => {
@@ -67,24 +71,69 @@ const DataTable = () => {
 
   const updateHotelApprovalStatus = async (hotelId, status) => {
     try {
-      const token = localStorage.getItem('token');  // Assuming the token is stored in localStorage
+      const token = localStorage.getItem('token');
 
-      const response = await axiosInstance.patch(
+      await axiosInstance.patch(
         `http://127.0.0.1:8000/api/hotels/${hotelId}/update_status/`,
         { status },
         { headers: { Authorization: `Token ${token}` } }
       );
 
-      // Update only the hotel data without affecting userData
-      const updatedHotelData = hotelData.map(hotel =>
-        hotel.id === hotelId ? { ...hotel, is_verified: status === 'confirmed' } : hotel
+      // ✅ ตรวจสอบว่าถ้าเป็น "cancelled" ต้องให้เหตุผล
+      let newReason = "";
+      if (status === "cancelled") {
+        newReason = prompt("Please enter a reason for cancellation:") || "No reason provided";
+      }
+
+      if (newReason) {
+        await axiosInstance.patch(
+          `http://127.0.0.1:8000/api/hotels/${hotelId}/update_reason/`,
+          { reason: newReason },
+          { headers: { Authorization: `Token ${token}` } }
+        );
+      }
+
+      // ✅ อัปเดต State ให้ reason เปลี่ยนแปลงได้
+      setHotelData((prev) =>
+        prev.map((hotel) =>
+          hotel.id === hotelId
+            ? { ...hotel, status, reason: newReason } // ✅ แก้ status และ reason พร้อมกัน
+            : hotel
+        )
       );
-      setHotelData(updatedHotelData);  // Update the hotel table with the new status
+
     } catch (error) {
       console.error("Error updating hotel approval status:", error);
       alert("Error updating hotel approval status");
     }
   };
+
+
+  const updateHotelReason = async (hotelId, reason) => {
+    try {
+      const token = localStorage.getItem('token');
+  
+      await axiosInstance.patch(
+        `http://127.0.0.1:8000/api/hotels/${hotelId}/update_reason/`,
+        { reason },
+        { headers: { Authorization: `Token ${token}` } }
+      );
+  
+      // ✅ อัปเดตค่า reason ใน hotelData ให้แสดงผลทันที
+      setHotelData((prev) =>
+        prev.map((hotel) =>
+          hotel.id === hotelId ? { ...hotel, reason } : hotel
+        )
+      );
+  
+    } catch (error) {
+      console.error("🚨 Error updating hotel reason:", error);
+      alert("Error updating hotel reason");
+    }
+  };
+  
+
+
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
@@ -167,14 +216,14 @@ const DataTable = () => {
           <div className="overflow-x-auto h-[450px]">
             <table className="display stripe hover w-full">
               <thead>
-                <tr>
-                  <th>IDfgfg</th>
+              <tr>
+                  <th>ID</th>
                   <th>Hotel</th>
                   <th>Registrant</th>
                   <th>Status</th>
                   <th>Approved By</th>
                   <th>Approved At</th>
-                  <th>Reason</th>
+                  <th>Reason</th> {/* ✅ เพิ่มคอลัม Reason */}
                 </tr>
               </thead>
               <tbody>
@@ -185,8 +234,8 @@ const DataTable = () => {
                     <td>{hotel.registrant}</td>
                     <td>
                       <select
-                        value={hotel.is_verified ? "confirmed" : "pending"}
-                        onChange={(e) => updateHotelApprovalStatus(hotel.id, e.target.value === "confirmed" ? "confirmed" : "pending")}
+                        value={hotel.is_verified ? "confirmed" : hotel.status}
+                        onChange={(e) => updateHotelApprovalStatus(hotel.id, e.target.value)}
                       >
                         <option value="pending">Pending</option>
                         <option value="confirmed">Confirmed</option>
@@ -195,10 +244,26 @@ const DataTable = () => {
                     </td>
                     <td>{hotel.approved_by}</td>
                     <td>{hotel.approved_at}</td>
-                    <td>{hotel.reason}</td>
+                    <td>
+                      <input
+                        type="text"
+                        value={reasonData[hotel.id] ?? hotel.reason ?? ""}
+                        onChange={(e) =>
+                          setReasonData((prev) => ({
+                            ...prev,
+                            [hotel.id]: e.target.value,
+                          }))
+                        }
+                        onBlur={() => updateHotelReason(hotel.id, reasonData[hotel.id] ?? hotel.reason)}
+                        className="border rounded px-2 py-1 w-full"
+                        placeholder="Enter reason..."
+                        disabled={hotel.status !== "cancelled"} // ✅ ให้แก้ได้เฉพาะเมื่อ status เป็น "cancelled"
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
+
             </table>
           </div>
         </div>

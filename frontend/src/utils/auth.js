@@ -1,5 +1,6 @@
 import axiosInstance from "./axios";
 
+<<<<<<< HEAD
 export const login = async (formData) => {
   try {
     const response = await axiosInstance.post("auth/login/", formData);
@@ -97,12 +98,17 @@ export const logout = async () => {
   }
 };
 
+=======
+>>>>>>> bcf2a1ed48d0c0883e0d3c08b63f3bbd2527e840
 export const isAuthenticated = () => {
   const token = localStorage.getItem("token");
   return !!token;
 };
+<<<<<<< HEAD
 
 export const isStaffUser = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   return user?.is_staff === true;
 };
+=======
+>>>>>>> bcf2a1ed48d0c0883e0d3c08b63f3bbd2527e840
