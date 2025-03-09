@@ -1,16 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"; // ✅ Correct in Next.js App Router
+import { useRouter } from "next/navigation"
 import Head from "next/head"
 import { toast } from "@/hooks/use-toast"
 import axiosInstance from "@/utils/axios"
 import AddHotelForm from "@/components/AddHotelForm"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Edit, Trash2, Star, MapPin, Phone, Mail, Globe } from "lucide-react"
+import { Edit, Trash2, Star, MapPin, Phone, Mail, Globe, Building, BedDouble, Coffee } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import Navbar from "@/components/navbar/headernav"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export default function ManageHotelsPage() {
   const router = useRouter()
@@ -81,13 +82,17 @@ export default function ManageHotelsPage() {
     }
   }
 
+  const navigateToEdit = (hotelId, tab = "hotel") => {
+    router.push(`/mainHotel/manage/edit/${hotelId}/${tab}`)
+  }
+
   return (
     <div className="min-h-screen bg-[#E8E0D5]">
       <Head>
         <title>Manage Hotels | PetStay</title>
         <meta name="description" content="Manage your pet hotels" />
       </Head>
-      <Navbar/>
+      <Navbar />
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
@@ -187,10 +192,46 @@ export default function ManageHotelsPage() {
                         </div>
                       </CardContent>
                       <CardFooter className="flex justify-between border-t pt-4">
-                        <Button variant="outline" size="sm" onClick={() => router.push(`/mainHotel/manage/edit/${hotel.id}`)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Details
-                        </Button>
+                        <div className="flex gap-2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Hotel
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="w-56">
+                              <DropdownMenuItem onClick={() => navigateToEdit(hotel.id, "/")}>
+                                <Building className="h-4 w-4 mr-2" />
+                                <span>Edit Hotel Info</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => navigateToEdit(hotel.id, "rooms")}>
+                                <BedDouble className="h-4 w-4 mr-2" />
+                                <span>Edit Rooms</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => navigateToEdit(hotel.id, "facilities")}>
+                                <Coffee className="h-4 w-4 mr-2" />
+                                <span>Edit Facilities</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+
+                          {/* <div className="hidden md:flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => navigateToEdit(hotel.id, "hotel")}>
+                              <Building className="h-4 w-4 mr-2" />
+                              Hotel Info
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => navigateToEdit(hotel.id, "rooms")}>
+                              <BedDouble className="h-4 w-4 mr-2" />
+                              Rooms
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => navigateToEdit(hotel.id, "facilities")}>
+                              <Coffee className="h-4 w-4 mr-2" />
+                              Facilities
+                            </Button>
+                          </div> */}
+                        </div>
+
                         <Button
                           variant="destructive"
                           size="sm"

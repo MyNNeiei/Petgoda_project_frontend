@@ -351,17 +351,6 @@ export default function RoomItem({
                   />
                 </div>
 
-                <div className="mt-1">
-                  <Input
-                    type="text"
-                    placeholder="Image description"
-                    value={image.description || ""}
-                    onChange={(e) =>
-                      handleRoomImageDescriptionChange(roomId, imgIndex, e.target.value, image.id !== undefined)
-                    }
-                    className="text-xs"
-                  />
-                </div>
               </div>
             ))}
 
@@ -390,6 +379,20 @@ export default function RoomItem({
               placeholder="Add any special notes about this room (not visible to guests)"
             />
           </div>
+        </div>
+
+        <div className="mt-8 flex justify-center">
+          <Button type="button" onClick={handleCreateRoom} className="px-6" size="lg" disabled={creating}>
+            {creating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating New Room...
+              </>
+            ) : (
+              "Create New Room"
+            )}
+            
+          </Button>
         </div>
       </div>
     </div>

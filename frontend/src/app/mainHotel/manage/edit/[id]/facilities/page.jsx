@@ -7,17 +7,16 @@ import { Button } from "@/components/ui/button"
 import Navbar from "@/components/navbar/headernav"
 import { toast } from "@/hooks/use-toast"
 import { Loader2, Save, Building, BedDouble, Coffee } from "lucide-react"
-import HotelInfoTab from "@/components/hotel-edit/hotel-info-tab"
+import FacilitiesTab from "@/components/hotel-edit/facilities-tab"
 import Link from "next/link"
 
-export default function EditHotelInfoPage() {
+export default function EditHotelFacilitiesPage() {
   const { id } = useParams()
   const router = useRouter()
   const [hotel, setHotel] = useState(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState(null)
-  const [imagePreview, setImagePreview] = useState(null)
 
   useEffect(() => {
     const fetchHotel = async () => {
@@ -26,11 +25,6 @@ export default function EditHotelInfoPage() {
 
         const response = await axiosInstance.get(`/api/hotels/${id}`)
         setHotel(response.data.hotel)
-        console.log(response.data.hotel.id)
-        // Set image preview if hotel has an image
-        if (response.data.hotel?.imgHotel) {
-          setImagePreview(response.data.hotel.imgHotel)
-        }
       } catch (err) {
         console.error("Error fetching hotel details:", err)
         setError("Failed to load hotel details.")
@@ -47,57 +41,31 @@ export default function EditHotelInfoPage() {
     fetchHotel()
   }, [id])
 
-  const handleUpdateHotelInfo = async () => {
+  const handleUpdateFacilities = async () => {
     setUpdating(true)
 
     try {
-      const formData = new FormData()
-
-      // Add basic hotel properties to formData
-      for (const key in hotel) {
-        // ส่ง imgHotel เฉพาะเมื่อเป็น File เท่านั้น
-        if (key === "imgHotel") {
-          if (hotel.imgHotel instanceof File) {
-            formData.append("imgHotel", hotel.imgHotel)
-          }
-          // ถ้าเป็น URL หรือข้อมูลอื่นที่ไม่ใช่ File ให้ข้าม
-        } else if (key !== "rooms" && key !== "facilities") {
-          formData.append(key, hotel[key])
-        }
+      // Handle facilities separately
+      const facilitiesData = {
+        hotelId: id,
+        facilities: hotel.facilities,
       }
-      formData.append("hotel_id", id);
 
-      await axiosInstance.put(`/api/hotels/edit/${id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
+      await axiosInstance.put(`/api/hotels/${id}/facilities`, facilitiesData)
 
       toast({
         title: "Success",
-        description: "Hotel information updated successfully!",
+        description: "Hotel facilities updated successfully!",
       })
     } catch (err) {
-      console.error("Error updating hotel info:", err)
+      console.error("Error updating facilities:", err)
       toast({
         title: "Error",
-        description: "Failed to update hotel information.",
+        description: "Failed to update hotel facilities.",
         variant: "destructive",
       })
     } finally {
       setUpdating(false)
-    }
-  }
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      setHotel({ ...hotel, imgHotel: file })
-
-      // Create preview URL
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result)
-      }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -128,52 +96,47 @@ export default function EditHotelInfoPage() {
       <Navbar />
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Edit Hotel Information</h1>
+          <h1 className="text-2xl font-bold">Edit Hotel Facilities</h1>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="flex items-center gap-2" asChild>
+              <Link href={`/mainHotel/manage/edit/${id}`}>
+                <Building className="h-4 w-4" />
+                Edit Hotel Info
+              </Link>
+            </Button>
             <Button variant="outline" size="sm" className="flex items-center gap-2" asChild>
               <Link href={`/mainHotel/manage/edit/${id}/rooms`}>
                 <BedDouble className="h-4 w-4" />
                 Edit Rooms
               </Link>
             </Button>
-            <Button variant="outline" size="sm" className="flex items-center gap-2" asChild>
-              <Link href={`/mainHotel/manage/edit/${id}/facilities`}>
-                <Coffee className="h-4 w-4" />
-                Edit Facilities
-              </Link>
-            </Button>
           </div>
         </div>
 
         <div className="bg-muted/50 p-4 rounded-lg mb-6 flex items-center">
-          <Building className="h-5 w-5 mr-2 text-primary" />
+          <Coffee className="h-5 w-5 mr-2 text-primary" />
           <span>
-            You are editing the basic information for <strong>{hotel?.name}</strong>
+            You are editing the facilities for <strong>{hotel?.name}</strong>
           </span>
         </div>
 
-        <HotelInfoTab
-          hotel={hotel}
-          setHotel={setHotel}
-          imagePreview={imagePreview}
-          handleImageChange={handleImageChange}
-        />
+        <FacilitiesTab hotel={hotel} setHotel={setHotel} />
 
         <div className="flex justify-between mt-6 pt-6 border-t">
           <Button variant="outline" onClick={() => router.push("/mainHotel/manage/")}>
             Back to Hotels
           </Button>
 
-          <Button onClick={handleUpdateHotelInfo} disabled={updating} className="flex items-center gap-2">
+          <Button onClick={handleUpdateFacilities} disabled={updating} className="flex items-center gap-2">
             {updating ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Saving Hotel Info...
+                Saving Facilities...
               </>
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                Save Hotel Info
+                Save Facilities
               </>
             )}
           </Button>

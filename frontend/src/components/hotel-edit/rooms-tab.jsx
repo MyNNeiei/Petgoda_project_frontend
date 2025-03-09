@@ -1,7 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { toast } from "@/hooks/use-toast"
+import { Loader2 } from "lucide-react"
+import axiosInstance from "@/utils/axios"
 import RoomItem from "./room-item"
 
 export default function RoomsTab({
@@ -14,13 +18,74 @@ export default function RoomsTab({
   handleRemoveRoomImage,
   handleRoomImageDescriptionChange,
 }) {
+  const [creating, setCreating] = useState(false)
+
+  const handleCreateRoom = async () => {
+    setCreating(true)
+
+    try {
+      // Create a new room object
+      const newRoom = {
+        hotelId: hotel.id,
+        roomname: "New Room",
+        price_per_night: 0,
+        size: 0,
+        max_pets: 1,
+        current_pets_count_int: 0,
+        rating_decimal: 0,
+        total_review: 0,
+        availability_status: "available",
+        room_type: "standard",
+        allow_pet_size: "small",
+        allow_pet_type: "dog",
+      }
+
+      // Make POST request to create a new room
+      const response = await axiosInstance.post(`/api/hotels/${hotel.id}/rooms/create/`, newRoom)
+
+      // Add the newly created room to the hotel state
+      const createdRoom = response.data.room
+      setHotel({
+        ...hotel,
+        rooms: [...(hotel?.rooms || []), createdRoom],
+      })
+
+      // Initialize empty image array for this room
+      const roomId = createdRoom.id
+
+      toast({
+        title: "Success",
+        description: "Room created successfully!",
+      })
+    } catch (err) {
+      console.error("Error creating room:", err)
+      toast({
+        title: "Error",
+        description: "Failed to create room. Using local state instead.",
+        variant: "destructive",
+      })
+
+      // Fallback to local state if API call fails
+      handleAddRoom()
+    } finally {
+      setCreating(false)
+    }
+  }
+
   return (
     <Card>
       <CardContent className="pt-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Rooms</h2>
-          <Button type="button" onClick={handleAddRoom}>
-            Add Room
+          <Button type="button" onClick={handleCreateRoom} disabled={creating}>
+            {creating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              "Add Room"
+            )}
           </Button>
         </div>
 
@@ -47,12 +112,6 @@ export default function RoomsTab({
           ))}
         </div>
 
-        {/* Add a Create New Room button at the bottom */}
-        <div className="mt-8 flex justify-center">
-          <Button type="button" onClick={handleAddRoom} className="px-6" size="lg">
-            Create New Room
-          </Button>
-        </div>
       </CardContent>
     </Card>
   )
