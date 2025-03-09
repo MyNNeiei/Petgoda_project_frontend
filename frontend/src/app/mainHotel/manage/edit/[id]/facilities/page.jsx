@@ -51,7 +51,7 @@ export default function EditHotelFacilitiesPage() {
         facilities: hotel.facilities,
       }
 
-      await axiosInstance.put(`/api/hotels/${id}/facilities`, facilitiesData)
+      await axiosInstance.put(`/api/hotels/facilities/update/${id}`, facilitiesData)
 
       toast({
         title: "Success",

@@ -330,7 +330,7 @@ export default function RoomItem({
 
           {/* Display existing room images */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
-            {roomImagePreviews[roomId]?.map((image, imgIndex) => (
+            {/* {roomImagePreviews[roomId]?.map((image, imgIndex) => (
               <div key={imgIndex} className="relative border rounded-md p-2">
                 <Button
                   type="button"
@@ -351,14 +351,25 @@ export default function RoomItem({
                   />
                 </div>
 
+                <div className="mt-1">
+                  <Input
+                    type="text"
+                    placeholder="Image description"
+                    value={image.description || ""}
+                    onChange={(e) =>
+                      handleRoomImageDescriptionChange(roomId, imgIndex, e.target.value, image.id !== undefined)
+                    }
+                    className="text-xs"
+                  />
+                </div>
               </div>
-            ))}
+            ))} */}
 
-            {(!roomImagePreviews[roomId] || roomImagePreviews[roomId].length === 0) && (
+            {/* {(!roomImagePreviews[roomId] || roomImagePreviews[roomId].length === 0) && (
               <div className="col-span-full text-center py-8 border rounded-md border-dashed text-muted-foreground">
                 No images added yet. Click "Add Images" to upload room photos.
               </div>
-            )}
+            )} */}
           </div>
         </div>
 
@@ -379,20 +390,6 @@ export default function RoomItem({
               placeholder="Add any special notes about this room (not visible to guests)"
             />
           </div>
-        </div>
-
-        <div className="mt-8 flex justify-center">
-          <Button type="button" onClick={handleCreateRoom} className="px-6" size="lg" disabled={creating}>
-            {creating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating New Room...
-              </>
-            ) : (
-              "Create New Room"
-            )}
-            
-          </Button>
         </div>
       </div>
     </div>
