@@ -84,10 +84,10 @@ const ReservationDetail = () => {
     };
 
 
-    // Go back to reservations list
     const goBack = () => {
-        router.push('/reservations')
-    }
+        router.push('/reservationhistory'); // ✅ เปลี่ยน path ไปที่ reservationhistory
+    };
+
 
     // Render status badge with appropriate color
     const renderStatusBadge = (status) => {
@@ -223,7 +223,6 @@ const ReservationDetail = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <h3 className="text-lg font-semibold mb-4">Reservation Details</h3>
-
                                 <div className="space-y-4">
                                     <div className="flex items-start">
                                         <Calendar className="h-5 w-5 mr-2 text-muted-foreground" />
@@ -242,62 +241,50 @@ const ReservationDetail = () => {
                                     </div>
 
                                     <div className="flex items-start">
-                                        <Clock className="h-5 w-5 mr-2 text-muted-foreground" />
-                                        <div>
-                                            <p className="text-sm text-muted-foreground">Duration</p>
-                                            <p className="font-medium">
-                                                {reservation.duration || 'N/A'} {reservation.duration === 1 ? 'day' : 'days'}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-start">
                                         <Home className="h-5 w-5 mr-2 text-muted-foreground" />
                                         <div>
                                             <p className="text-sm text-muted-foreground">Room</p>
-                                            <p className="font-medium">
-                                                {reservation.room?.number || reservation.room || 'N/A'}
-                                                {reservation.room?.type && ` (${reservation.room.type})`}
-                                            </p>
+                                            <p className="font-medium">{reservation.room}</p>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
 
-                            <div>
-                                <h3 className="text-lg font-semibold mb-4">Pet & Owner Information</h3>
-
-                                <div className="space-y-4">
-                                    <div className="flex items-start">
-                                        <User className="h-5 w-5 mr-2 text-muted-foreground" />
+                                    {/* <div className="flex items-start">
+                                        <CheckCircle className="h-5 w-5 mr-2 text-muted-foreground" />
                                         <div>
-                                            <p className="text-sm text-muted-foreground">Owner</p>
-                                            <p className="font-medium">
-                                                {reservation.pet_owner?.username || reservation.pet_owner || 'N/A'}
-                                            </p>
-                                            {reservation.pet_owner?.email && (
-                                                <p className="text-sm text-muted-foreground">{reservation.pet_owner.email}</p>
-                                            )}
+                                            <p className="text-sm text-muted-foreground">Payment Status</p>
+                                            <p className="font-medium">{reservation.payment_status}</p>
+                                        </div>
+                                    </div> */}
+
+                                    <div className="flex items-start">
+                                        <Clock className="h-5 w-5 mr-2 text-muted-foreground" />
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">Created At</p>
+                                            <p className="font-medium">{formatDate(reservation.created_at)}</p>
                                         </div>
                                     </div>
 
                                     <div className="flex items-start">
-                                        <PawPrint className="h-5 w-5 mr-2 text-muted-foreground" />
+                                        <Clock className="h-5 w-5 mr-2 text-muted-foreground" />
                                         <div>
-                                            <p className="text-sm text-muted-foreground">Pet</p>
-                                            <p className="font-medium">
-                                                {reservation.pet?.name || reservation.pet || 'N/A'}
-                                            </p>
-                                            {reservation.pet?.breed && (
-                                                <p className="text-sm text-muted-foreground">
-                                                    {reservation.pet.breed}, {reservation.pet.age} years old
-                                                </p>
-                                            )}
+                                            <p className="text-sm text-muted-foreground">Updated At</p>
+                                            <p className="font-medium">{formatDate(reservation.updated_at)}</p>
                                         </div>
                                     </div>
+
+                                    {reservation.special_request && (
+                                        <div className="mt-6">
+                                            <h3 className="text-lg font-semibold mb-2">Special Requests</h3>
+                                            <div className="bg-muted p-4 rounded-md">
+                                                <p>{reservation.special_request}</p>
+                                            </div>
+                                        </div>
+                                    )}
+
                                 </div>
                             </div>
                         </div>
+
 
                         {reservation.special_requests && (
                             <div className="mt-6">
@@ -323,6 +310,10 @@ const ReservationDetail = () => {
                     <CardFooter className="flex flex-col sm:flex-row justify-between p-6 gap-4">
                         <div>
                             <p className="text-sm text-muted-foreground mb-1">Total Price</p>
+                            {/* <p className="text-2xl font-bold">
+                                ${reservation.total_price ? reservation.total_price.toFixed(2) : "0.00"}
+                            </p> */}
+
                             <p className="text-2xl font-bold">
                                 ${reservation.total_price || 'N/A'}
                             </p>
