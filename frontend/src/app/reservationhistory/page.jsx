@@ -17,52 +17,70 @@ const ReservationHistory = () => {
     const [error, setError] = useState(null)
     const router = useRouter()
     const { toast } = useToast()
-    const userRole = localStorage.getItem("role"); // Assume "admin" or "user"
+    const [isStaff, setIsStaff] = useState(false) // ✅ ใช้ตัวแปรเดียว ไม่ซ้ำซ้อน
 
-
-    // Fetch reservations on component mount
     useEffect(() => {
-        const fetchReservations = async () => {
+        const fetchUserRole = async () => {
             try {
                 const token = localStorage.getItem("token")
+                if (!token) return
 
-                if (!token) {
-                    setError("No authentication token found. Please log in.")
-                    setLoading(false)
-                    toast({
-                        title: "Authentication Error",
-                        description: "Please log in to view your reservations",
-                        variant: "destructive",
-                    })
-                    return
-                }
+                const response = await axiosInstance.get("/api/users/me/")
+                const userData = response.data
 
-                // Since we're using the interceptor in axiosInstance, we don't need to manually set the token here
-                const response = await axiosInstance.get("/api/reservations/")
+                console.log("👤 User Data:", userData) // ✅ Debugging ทั้งหมด
+                console.log("🔍 is_staff:", userData.is_staff) // ✅ เช็คว่า is_staff มีค่าถูกต้องไหม
 
-                setReservations(response.data)
-                setLoading(false)
+                setIsStaff(userData.is_staff)  // กำหนดค่าให้ state
             } catch (err) {
-                console.error("Error fetching reservations:", err)
-                setError("Failed to load reservations. Please try again later.")
-                setLoading(false)
-                toast({
-                    title: "Error",
-                    description: "Failed to load reservations",
-                    variant: "destructive",
-                })
+                console.error("Error fetching user role:", err)
             }
         }
 
-        fetchReservations()
+        fetchUserRole()
+    }, [])
+
+
+
+    // ✅ โหลดข้อมูลการจอง
+    const fetchReservations = useCallback(async () => {
+        try {
+            const token = localStorage.getItem("token")
+            if (!token) {
+                setError("No authentication token found. Please log in.")
+                setLoading(false)
+                toast({
+                    title: "Authentication Error",
+                    description: "Please log in to view your reservations",
+                    variant: "destructive",
+                })
+                return
+            }
+
+            const response = await axiosInstance.get("/api/reservations/")
+            setReservations(response.data)
+            setLoading(false)
+        } catch (err) {
+            console.error("Error fetching reservations:", err)
+            setError("Failed to load reservations. Please try again later.")
+            setLoading(false)
+            toast({
+                title: "Error",
+                description: "Failed to load reservations",
+                variant: "destructive",
+            })
+        }
     }, [toast])
 
-    // Update reservation status
+    useEffect(() => {
+        fetchReservations()
+    }, [fetchReservations])
+
+    // ✅ อัปเดตสถานะการจอง
     const updateReservationStatus = useCallback(
         async (reservationId, status) => {
             try {
                 const token = localStorage.getItem("token")
-
                 if (!token) {
                     toast({
                         title: "Authentication Error",
@@ -72,13 +90,14 @@ const ReservationHistory = () => {
                     return
                 }
 
-                setReservations((prev) => prev.map((res) => (res.id === reservationId ? { ...res, statusLoading: true } : res)))
+                setReservations((prev) =>
+                    prev.map((res) => (res.id === reservationId ? { ...res, statusLoading: true } : res))
+                )
 
-                // Using axiosInstance with interceptor, so no need to manually set the token
                 const response = await axiosInstance.patch(`/api/reservations/${reservationId}/update_status/`, { status })
 
                 setReservations((prev) =>
-                    prev.map((res) => (res.id === reservationId ? { ...res, status, statusLoading: false } : res)),
+                    prev.map((res) => (res.id === reservationId ? { ...res, status, statusLoading: false } : res))
                 )
 
                 toast({
@@ -88,9 +107,8 @@ const ReservationHistory = () => {
                 })
             } catch (error) {
                 console.error("Error updating reservation status:", error)
-
                 setReservations((prev) =>
-                    prev.map((res) => (res.id === reservationId ? { ...res, statusLoading: false } : res)),
+                    prev.map((res) => (res.id === reservationId ? { ...res, statusLoading: false } : res))
                 )
 
                 toast({
@@ -100,15 +118,13 @@ const ReservationHistory = () => {
                 })
             }
         },
-        [toast],
+        [toast]
     )
 
-    // View reservation details
     const viewReservationDetails = (reservationId) => {
-        router.push(`/reservationhistory/${reservationId}`); // ✅ เปลี่ยน path ไปที่ reservationhistory/{id}
-    };
+        router.push(`/reservationhistory/${reservationId}`)
+    }
 
-    // Render status badge with appropriate color
     const renderStatusBadge = (status) => {
         switch (status) {
             case "confirmed":
@@ -163,18 +179,18 @@ const ReservationHistory = () => {
             <Navbar />
             <div className="container mx-auto py-8 px-4">
                 <Card>
-                    
+
                     <CardHeader>
-                    
+
                         <CardTitle className="text-2xl">Reservation History</CardTitle>
                         <CardDescription>Manage and view your pet hotel reservations</CardDescription>
                     </CardHeader>
                     <CardContent>
-                    {userRole !== "admin" && (
-    <Button onClick={() => router.push("/reservationhistory/new")}>
-        + New Reservation
-    </Button>
-)}
+                        {/* {userRole !== "admin" && (
+                            <Button onClick={() => router.push("/reservationhistory/new")}>
+                                + New Reservation
+                            </Button>
+                        )} */}
 
                         {reservations.length === 0 ? (
                             <div className="text-center py-8">
@@ -211,45 +227,48 @@ const ReservationHistory = () => {
                                                             View
                                                         </Button>
 
-
+                                                        {/* ✅ ทุกคนสามารถยกเลิกการจองได้ */}
                                                         {reservation.status === "pending" && (
-                                                            <>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="default"
-                                                                    className="bg-green-600 hover:bg-green-700"
-                                                                    onClick={() => updateReservationStatus(reservation.id, "confirmed")}
-                                                                    disabled={reservation.statusLoading}
-                                                                >
-                                                                    {reservation.statusLoading ? (
-                                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                                    ) : (
-                                                                        <>
-                                                                            <CheckCircle className="h-4 w-4 mr-1" />
-                                                                            Confirm
-                                                                        </>
-                                                                    )}
-                                                                </Button>
-
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="destructive"
-                                                                    onClick={() => updateReservationStatus(reservation.id, "cancelled")}
-                                                                    disabled={reservation.statusLoading}
-                                                                >
-                                                                    {reservation.statusLoading ? (
-                                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                                    ) : (
-                                                                        <>
-                                                                            <XCircle className="h-4 w-4 mr-1" />
-                                                                            Cancel
-                                                                        </>
-                                                                    )}
-                                                                </Button>
-                                                            </>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="destructive"
+                                                                onClick={() => updateReservationStatus(reservation.id, "cancelled")}
+                                                                disabled={reservation.statusLoading}
+                                                            >
+                                                                {reservation.statusLoading ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <>
+                                                                        <XCircle className="h-4 w-4 mr-1" />
+                                                                        Cancel
+                                                                    </>
+                                                                )}
+                                                            </Button>
                                                         )}
+
+                                                        {console.log("🔎 isStaff:", isStaff, "Status:", reservation.status)}
+                                                        {isStaff && reservation.status === "pending" && (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="default"
+                                                                className="bg-green-600 hover:bg-green-700"
+                                                                onClick={() => updateReservationStatus(reservation.id, "confirmed")}
+                                                                disabled={reservation.statusLoading}
+                                                            >
+                                                                {reservation.statusLoading ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <>
+                                                                        <CheckCircle className="h-4 w-4 mr-1" />
+                                                                        Confirm
+                                                                    </>
+                                                                )}
+                                                            </Button>
+                                                        )}
+                                                        
                                                     </div>
                                                 </TableCell>
+
                                             </TableRow>
                                         ))}
                                     </TableBody>

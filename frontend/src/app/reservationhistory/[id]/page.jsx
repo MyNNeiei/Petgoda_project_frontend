@@ -315,67 +315,11 @@ const ReservationDetail = () => {
                             </p> */}
 
                             <p className="text-2xl font-bold">
-                                ${reservation.total_price || 'N/A'}
+                                ฿{reservation.total_price || 'N/A'}
                             </p>
                         </div>
 
-                        <div className="flex gap-3">
-                            {reservation.status === 'pending' && (
-                                <>
-                                    <Button
-                                        variant="default"
-                                        className="bg-green-600 hover:bg-green-700"
-                                        onClick={() => {
-                                            console.log("🟢 Confirm Button Clicked"); // ✅ Debug ปุ่มถูกกดหรือไม่
-                                            updateReservationStatus(reservation.id, "confirmed");
-                                        }}
-                                        disabled={actionLoading}
-                                    >
 
-                                        {actionLoading ? (
-                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                        ) : (
-                                            <CheckCircle className="h-4 w-4 mr-2" />
-                                        )}
-                                        Confirm Reservation
-                                    </Button>
-
-                                    <Button
-                                        variant="destructive"
-                                        onClick={() => {
-                                            console.log("🔴 Cancel Button Clicked"); // ✅ Debug ปุ่มถูกกดหรือไม่
-                                            updateReservationStatus(reservation.id, "cancelled");
-                                        }}
-                                        disabled={actionLoading}
-                                    >
-
-                                        {actionLoading ? (
-                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                        ) : (
-                                            <XCircle className="h-4 w-4 mr-2" />
-                                        )}
-                                        Cancel Reservation
-                                    </Button>
-                                </>
-                            )}
-
-                            {reservation.status === 'confirmed' && (
-                                <Button
-                                    variant="destructive"
-                                    onClick={() => updateReservationStatus("cancelled")}
-                                    disabled={actionLoading}
-                                >
-                                    {actionLoading ? (
-                                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                    ) : (
-                                        <XCircle className="h-4 w-4 mr-2" />
-                                    )}
-                                    Cancel Reservation
-                                </Button>
-                            )}
-
-                            {(reservation.status === 'cancelled' || reservation.status === 'completed')}
-                        </div>
                     </CardFooter>
                 </Card>
             </div>

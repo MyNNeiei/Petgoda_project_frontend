@@ -1,0 +1,136 @@
+/* Center the tables and make them responsive */
+.centerr {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* ความสูงขั้นต่ำเต็มหน้าจอ */
+    margin-left: 250px;
+  }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .centerr {
+        margin-left: 0;
+        grid-template-columns: 1fr;
+    }
+
+    #hs-sidebar-basic-usage {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+/* Table styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+@media (max-width: 768px) {
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+.overflow-auto {
+    overflow: auto;
+    /* ทำให้ scrollable เมื่อเนื้อหาเกิน */
+}
+
+.max-h-\[80vh\] {
+    max-height: 80vh;
+    /* ความสูงสูงสุด 80% ของหน้าจอ */
+}
+
+.maintopic {
+    font-size: xx-large;
+    text-align: center;
+    margin-bottom: 3%;
+    margin-top: 3%;
+}
+
+/* General styles */
+main {
+    width: 100%;
+    overflow-x: hidden;
+  }
+  
+  .maintopic {
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  /* Responsive table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  th, td {
+    padding: 8px;
+    text-align: left;
+    white-space: nowrap; /* Prevent text wrapping */
+  }
+  
+  /* Ensure table scrolls horizontally on small screens */
+  .overflow-x-auto {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Sidebar adjustments */
+  #hs-sidebar-basic-usage {
+    z-index: 40;
+  }
+  
+  /* Media Queries */
+  @media (max-width: 768px) {
+    /* Stack tables vertically on small screens */
+    .grid {
+      grid-template-columns: 1fr !important; /* Override md:grid-cols-2 */
+    }
+  
+    /* Adjust padding and font sizes */
+    .p-6 {
+      padding: 1rem;
+    }
+  
+    .text-sm {
+      font-size: 0.875rem;
+    }
+  
+    th, td {
+      padding: 6px;
+    }
+  
+    /* Ensure inputs/selects are usable */
+    select, input {
+      min-width: 80px;
+      font-size: 0.75rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    /* Further adjustments for very small screens */
+    th, td {
+      font-size: 0.7rem;
+      padding: 4px;
+    }
+  
+    .maintopic {
+      font-size: 1rem;
+    }
+  
+    .h-\[450px\] {
+      height: 300px; /* Reduce table height on small screens */
+    }
+  }

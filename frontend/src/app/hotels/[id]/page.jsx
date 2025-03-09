@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
+import Link from "next/link"
 import axiosInstance from "@/utils/axios"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+// import { useParams } from "next/navigation";  // ✅ เพิ่ม import
 
 export default function BookHotelPage() {
   const { id } = useParams()
@@ -27,6 +29,7 @@ export default function BookHotelPage() {
   const [booking, setBooking] = useState(false)
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState("details")
+  const { id: hotelId } = useParams();  // ✅ ดึง hotelId จาก URL
 
   // Booking state
   const [selectedRoom, setSelectedRoom] = useState(null)
@@ -250,73 +253,21 @@ export default function BookHotelPage() {
           </div>
 
           <div className="md:w-1/3">
-            <Card className="sticky top-4">
+            <Card className="sticky top-4 shadow-xl border border-primary">
               <CardContent className="pt-6">
-                <h2 className="text-xl font-semibold mb-4">Book Your Stay</h2>
-
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="check-in">Check-in Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal mt-1"
-                          id="check-in"
-                        >
-                          <Calendar className="mr-2 h-4 w-4" />
-                          {checkInDate ? format(checkInDate, "PPP") : "Select date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <CalendarComponent
-                          mode="single"
-                          selected={checkInDate}
-                          onSelect={setCheckInDate}
-                          disabled={isDateDisabled}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="check-out">Check-out Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal mt-1"
-                          id="check-out"
-                        >
-                          <Calendar className="mr-2 h-4 w-4" />
-                          {checkOutDate ? format(checkOutDate, "PPP") : "Select date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <CalendarComponent
-                          mode="single"
-                          selected={checkOutDate}
-                          onSelect={setCheckOutDate}
-                          disabled={(date) => isDateDisabled(date) || (checkInDate && date <= checkInDate)}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  {checkInDate && checkOutDate && (
-                    <div className="bg-muted p-3 rounded-md">
-                      <p className="text-sm font-medium">
-                        {Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24))} nights
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <Button className="w-full mt-4" onClick={() => setActiveTab("rooms")}>
-                  View Available Rooms
-                </Button>
+                <h2 className="text-2xl font-bold text-center mb-6 text-primary">Book Your Stay</h2>
+                <Link href={`/hotels/${hotelId}/reservation`}>
+                  <Button
+                    className="w-full px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-yellow-500 to-yellow-600 
+                 hover:from-yellow-600 hover:to-yellow-700 shadow-lg transform hover:scale-105 transition-all"
+                    onClick={() => setActiveTab("rooms")}
+                  >
+                    View Available Rooms
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
+
           </div>
         </div>
 
