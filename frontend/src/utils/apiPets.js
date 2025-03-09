@@ -70,7 +70,6 @@ export async function deletePet(id) {
 
 /** ✅ Update Profile */
 
-
 /** ✅ Fetch Pets by Profile ID */
 export async function fetchPetsByProfile(profileId) {
   try {
