@@ -27,11 +27,11 @@
 <hr>
 <h3>1. ติดตั้ง Frontend Dependencies</h3>
 ```- cd frontend <br>
-  - npm install
+  - pnpm install
 ```
 <h3>2. Run the Frontend (ต้องอยู่ใน Folder frontend)</h3>
 ```
-    npm run dev
+    pnpm run dev
 ```
 <h3>3. ข้อมูล User เผื่อทดสอบ (สำหรับอาจารย์)</h3>
 ```
