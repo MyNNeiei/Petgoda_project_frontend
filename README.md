@@ -36,10 +36,14 @@
 <h3>3. ข้อมูล User เผื่อทดสอบ (สำหรับอาจารย์)</h3>
 ```
     <h5>Userทั่วไป :</h5> 
-    - username : it65070023
-    - password : NNnam11234
-    <h5>UserAdmin</h5> 
-    - username : NNnam1_
-    - password : NNnam11234
+    <ul>
+      <li>username : it65070023</li>
+      <li>password : NNnam11234</li>
+    </ul>
+    <h5>UserAdmin</h5>
+    <ul>
+      <li>username : NNnam1_</li>
+      <li>password : NNnam11234</li>
+    </ul>
     ปล. หากอาจารย์ต้องการสร้างaccount เองสามารถ สร้างและ login ได้
 ```
