@@ -35,11 +35,11 @@
 ```
 <h3>3. ข้อมูล User เผื่อทดสอบ (สำหรับอาจารย์)</h3>
 ```
-    Userทั่วไป : 
-    username : it65070023
-    password : NNnam11234
-    UserAdmin
-    username : NNnam1_
-    password : NNnam11234
+    <h5>Userทั่วไป :</h5> 
+    - username : it65070023
+    - password : NNnam11234
+    <h5>UserAdmin</h5> 
+    - username : NNnam1_
+    - password : NNnam11234
     ปล. หากอาจารย์ต้องการสร้างaccount เองสามารถ สร้างและ login ได้
 ```
