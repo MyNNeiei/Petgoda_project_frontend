@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
+import Link from "next/link"
 import axiosInstance from "@/utils/axios"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,15 +19,19 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+// import { useParams } from "next/navigation";  // ✅ เพิ่ม import
 
 export default function BookHotelPage() {
   const { id } = useParams()
   const router = useRouter()
   const [hotel, setHotel] = useState(null)
+  const [rooms, setRooms] = useState([])
   const [loading, setLoading] = useState(true)
   const [booking, setBooking] = useState(false)
+  const [roomsLoading, setRoomsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState("details")
+  const { id: hotelId } = useParams();  // ✅ ดึง hotelId จาก URL
 
   // Booking state
   const [selectedRoom, setSelectedRoom] = useState(null)
@@ -46,6 +51,49 @@ export default function BookHotelPage() {
   })
   const [paymentMethod, setPaymentMethod] = useState("credit_card")
 
+  const [facilitiesLoading, setFacilitiesLoading] = useState(false)
+  const [facilities, setFacilities] = useState(null)
+
+  // Update the getAvailableFacilities function to use the dedicated facilities state
+  const getAvailableFacilities = () => {
+    if (!facilities) return []
+
+    return Object.entries(facilities)
+      .filter(([key, value]) => value === true)
+      .map(([key]) => key)
+  }
+
+  const availableFacilities = getAvailableFacilities()
+
+  // Add a new function to fetch facilities
+  const fetchFacilities = async () => {
+    if (!id) return
+
+    setFacilitiesLoading(true)
+    try {
+      console.log(`🔍 Fetching facilities for hotel ID: ${id}`)
+      const response = await axiosInstance.get(`/api/hotels/${id}/facilities`)
+      console.log("✅ Fetched Facilities:", response.data)
+
+      if (response.data && response.data.facilities) {
+        setFacilities(response.data.facilities)
+      } else {
+        // Initialize with empty facilities if none exist
+        setFacilities({})
+      }
+    } catch (err) {
+      console.error("❌ Error fetching facilities:", err.response?.data || err.message)
+      toast({
+        title: "Warning",
+        description: "Failed to load hotel facilities. Some information may be missing.",
+        variant: "warning",
+      })
+      // Set empty facilities on error
+      setFacilities({})
+    } finally {
+      setFacilitiesLoading(false)
+    }
+  }
   useEffect(() => {
     const fetchHotel = async () => {
       try {
@@ -53,6 +101,8 @@ export default function BookHotelPage() {
 
         const response = await axiosInstance.get(`/api/hotels/${id}`)
         setHotel(response.data.hotel)
+
+        fetchFacilities()
       } catch (err) {
         console.error("Error fetching hotel details:", err)
         setError("Failed to load hotel details.")
@@ -68,6 +118,33 @@ export default function BookHotelPage() {
 
     fetchHotel()
   }, [id])
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      if (!id) return
+      
+      try {
+        setRoomsLoading(true)
+        console.log(`🔍 Fetching rooms for hotel ID: ${id}`)
+        const response = await axiosInstance.get(`/api/hotels/${id}/rooms`)
+        console.log("✅ Fetched Rooms:", response.data)
+        setRooms(response.data)
+      } catch (err) {
+        console.error("❌ Error fetching rooms:", err.response?.data || err.message)
+        toast({
+          title: "Error",
+          description: "Failed to load available rooms.",
+          variant: "destructive",
+        })
+      } finally {
+        setRoomsLoading(false)
+      }
+    }
+
+    if (activeTab === "rooms") {
+      fetchRooms()
+    }
+  }, [id, activeTab])
 
   const handleBooking = async (e) => {
     e.preventDefault()
@@ -190,133 +267,48 @@ export default function BookHotelPage() {
             {/* Facilities section */}
             <div className="mb-8">
               <h2 className="text-xl font-semibold mb-4">Facilities</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {hotel?.facilities?.has_wifi && (
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>WiFi</span>
-                  </div>
-                )}
-                {hotel?.facilities?.has_swimming_pool && (
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>Swimming Pool</span>
-                  </div>
-                )}
-                {hotel?.facilities?.has_veterinary_services && (
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>Veterinary Services</span>
-                  </div>
-                )}
-                {hotel?.facilities?.has_grooming_services && (
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>Grooming Services</span>
-                  </div>
-                )}
-                {hotel?.facilities?.has_training_services && (
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>Training Services</span>
-                  </div>
-                )}
-                {hotel?.facilities?.has_playground && (
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>Playground</span>
-                  </div>
-                )}
-                {hotel?.facilities?.has_outdoor_area && (
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>Outdoor Area</span>
-                  </div>
-                )}
-                {hotel?.facilities?.has_pet_friendly_cafe && (
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>Pet-Friendly Cafe</span>
-                  </div>
-                )}
-                {hotel?.facilities?.has_pet_spa && (
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>Pet Spa</span>
-                  </div>
-                )}
-              </div>
+
+              {facilitiesLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary mr-2" />
+                  <p className="text-muted-foreground">Loading facilities...</p>
+                </div>
+              ) : availableFacilities.length > 0 ? (
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {availableFacilities.map((facility) => {
+                    // Get the human-readable label for the facility
+                    const label = facilityLabels[facility] || facility.replace("has_", "").replace(/_/g, " ")
+
+                    return (
+                      <li key={facility} className="flex items-center gap-2 py-2">
+                        <Check className="h-5 w-5 text-green-600 flex-shrink-0" />
+                        <span className="text-gray-800">{label}</span>
+                      </li>
+                    )
+                  })}
+                </ul>
+              ) : (
+                <p className="text-muted-foreground">No facilities information available for this hotel.</p>
+              )}
             </div>
           </div>
 
           <div className="md:w-1/3">
-            <Card className="sticky top-4">
+            <Card className="sticky top-4 shadow-xl border border-primary">
               <CardContent className="pt-6">
-                <h2 className="text-xl font-semibold mb-4">Book Your Stay</h2>
-
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="check-in">Check-in Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal mt-1"
-                          id="check-in"
-                        >
-                          <Calendar className="mr-2 h-4 w-4" />
-                          {checkInDate ? format(checkInDate, "PPP") : "Select date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <CalendarComponent
-                          mode="single"
-                          selected={checkInDate}
-                          onSelect={setCheckInDate}
-                          disabled={isDateDisabled}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="check-out">Check-out Date</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal mt-1"
-                          id="check-out"
-                        >
-                          <Calendar className="mr-2 h-4 w-4" />
-                          {checkOutDate ? format(checkOutDate, "PPP") : "Select date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <CalendarComponent
-                          mode="single"
-                          selected={checkOutDate}
-                          onSelect={setCheckOutDate}
-                          disabled={(date) => isDateDisabled(date) || (checkInDate && date <= checkInDate)}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  {checkInDate && checkOutDate && (
-                    <div className="bg-muted p-3 rounded-md">
-                      <p className="text-sm font-medium">
-                        {Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24))} nights
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <Button className="w-full mt-4" onClick={() => setActiveTab("rooms")}>
-                  View Available Rooms
-                </Button>
+                <h2 className="text-2xl font-bold text-center mb-6 text-primary">Book Your Stay</h2>
+                <Link href={`/hotels/${hotelId}/reservation`}>
+                  <Button
+                    className="w-full px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-yellow-500 to-yellow-600 
+                 hover:from-yellow-600 hover:to-yellow-700 shadow-lg transform hover:scale-105 transition-all"
+                    onClick={() => setActiveTab("rooms")}
+                  >
+                    View Available Rooms
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
+
           </div>
         </div>
 
@@ -361,69 +353,55 @@ export default function BookHotelPage() {
             </TabsContent>
 
             <TabsContent value="rooms">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {hotel?.rooms?.map((room, index) => (
-                  <Card
-                    key={index}
-                    className={`overflow-hidden ${selectedRoom?.id === room.id ? "ring-2 ring-primary" : ""}`}
-                  >
-                    <div className="aspect-video overflow-hidden">
-                      {room.images && room.images.length > 0 ? (
-                        <img
-                          src={room.images[0].image || "/placeholder.svg"}
-                          alt={room.roomname}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-muted flex items-center justify-center">
-                          <p className="text-muted-foreground">No image available</p>
-                        </div>
-                      )}
+              {roomsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="ml-2">Loading available rooms...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {rooms && rooms.length > 0 ? (
+                    rooms.map((room, index) => (
+                      <Card
+                        key={room.id || index}
+                        className={`overflow-hidden ${selectedRoom?.id === room.id ? "ring-2 ring-primary" : ""}`}
+                      >
+
+                        <CardContent className="pt-6">
+                          <div className="flex justify-between items-start mb-2">
+                            <h3 className="text-lg font-semibold">{room.roomname}</h3>
+                            <Badge variant={isRoomAvailable(room) ? "outline" : "secondary"}>
+                              {isRoomAvailable(room) ? "Available" : "Unavailable"}
+                            </Badge>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-sm mb-4">
+                            <div className="flex items-center gap-1">
+                              <Users className="h-4 w-4 text-muted-foreground" />
+                              <span>Max Pets: {room.max_pets}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Paw className="h-4 w-4 text-muted-foreground" />
+                              <span>Pet Size: {room.allow_pet_size}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between items-center mt-4">
+                            <p className="font-semibold text-lg">
+                              ${room.price_per_night}{" "}
+                              <span className="text-sm font-normal text-muted-foreground">/ night</span>
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  ) : (
+                    <div className="col-span-full text-center py-12 border rounded-md border-dashed text-muted-foreground">
+                      No rooms available at this hotel.
                     </div>
-
-                    <CardContent className="pt-6">
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-lg font-semibold">{room.roomname}</h3>
-                        <Badge variant={isRoomAvailable(room) ? "outline" : "secondary"}>
-                          {isRoomAvailable(room) ? "Available" : "Unavailable"}
-                        </Badge>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-sm mb-4">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                          <span>Max Pets: {room.max_pets}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Paw className="h-4 w-4 text-muted-foreground" />
-                          <span>Pet Size: {room.allow_pet_size}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between items-center mt-4">
-                        <p className="font-semibold text-lg">
-                          ${room.price_per_night}{" "}
-                          <span className="text-sm font-normal text-muted-foreground">/ night</span>
-                        </p>
-                        <Button
-                          type="button"
-                          variant={selectedRoom?.id === room.id ? "default" : "outline"}
-                          disabled={!isRoomAvailable(room)}
-                          onClick={() => setSelectedRoom(room)}
-                        >
-                          {selectedRoom?.id === room.id ? "Selected" : "Select"}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-
-                {(!hotel?.rooms || hotel.rooms.length === 0) && (
-                  <div className="col-span-full text-center py-12 border rounded-md border-dashed text-muted-foreground">
-                    No rooms available at this hotel.
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
 
               {selectedRoom && (
                 <div className="mt-6 flex justify-end">

@@ -1,51 +1,96 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Search, Star, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import axiosInstance from "@/utils/axios";
-import Navbar from "@/components/navbar/headernav";
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Search, Star, MapPin, Info } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+import axiosInstance from "@/utils/axios"
+import Navbar from "@/components/navbar/headernav"
 
 export default function AllHotelsPage() {
-  const [hotels, setHotels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter()
+  const [hotels, setHotels] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [searchTerm, setSearchTerm] = useState("")
+
+  // State for confirmation dialog
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
+  const [selectedHotel, setSelectedHotel] = useState(null)
 
   // ✅ Fetch hotels from API
   useEffect(() => {
     const fetchHotels = async () => {
       try {
-        setLoading(true);
-        const response = await axiosInstance.get("/api/hotels/");
-        console.log("✅ Fetched Hotels:", response.data); // ✅ Debugging API response
+        setLoading(true)
+        setError(null)
+
+        const response = await axiosInstance.get("/api/hotels/")
+        console.log("✅ Raw API Response:", response.data)
+
+        if (!Array.isArray(response.data)) {
+          console.error("❌ Expected an array, but got:", response.data)
+          setError("Unexpected API response format.")
+          return
+        }
 
         // ✅ Filter only verified hotels
-        const verifiedHotels = response.data.filter((hotel) => hotel.is_verified);
-        setHotels(verifiedHotels);
-      } catch (err) {
-        console.error("Error fetching hotels:", err);
-        setError("Failed to load hotels. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
+        const verifiedHotels = response.data.filter((hotel) => hotel.is_verified !== false)
+        setHotels(verifiedHotels)
 
-    fetchHotels();
-  }, []);
+        console.log("✅ Filtered Hotels:", verifiedHotels)
+      } catch (err) {
+        console.error("❌ Error fetching hotels:", err)
+        setError("Failed to load hotels. Please try again.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchHotels()
+  }, [])
+
+  // ✅ ค้นหาชื่อโรงแรมหรือที่อยู่
+  const filteredHotels = hotels.filter(
+    (hotel) =>
+      (hotel.name ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (hotel.address ?? "").toLowerCase().includes(searchTerm.toLowerCase()),
+  )
+
+  // Handle view details click
+  const handleViewDetails = (hotel) => {
+    setSelectedHotel(hotel)
+    setConfirmDialogOpen(true)
+  }
+
+  // Handle confirmation
+  const handleConfirm = () => {
+    if (selectedHotel) {
+      router.push(`/hotels/${selectedHotel.id}`)
+    }
+    setConfirmDialogOpen(false)
+  }
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-600">Loading hotels...</p>
       </div>
-    );
+    )
   }
 
   if (error) {
-    return <div className="min-h-screen flex items-center justify-center text-red-600">{error}</div>;
+    return <div className="min-h-screen flex items-center justify-center text-red-600">{error}</div>
   }
 
   return (
@@ -69,53 +114,101 @@ export default function AllHotelsPage() {
 
         {/* Hotels Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {hotels
-            .filter((hotel) => hotel.name.toLowerCase().includes(searchTerm.toLowerCase()))
-            .map((hotel) => (
+          {filteredHotels.length > 0 ? (
+            filteredHotels.map((hotel) => (
               <Card key={hotel.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <Link href={`/hotels/${hotel.id}`} className="block">
-                  <div className="relative h-48">
-                    <img
-                      src={hotel.image_url || "/placeholder.svg"} // ✅ Fixed `hotel.image_url`
-                      alt={hotel.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </Link>
+                <div className="relative h-48 cursor-pointer" onClick={() => handleViewDetails(hotel)}>
+                  <img
+                    src={hotel.imgHotel || hotel.image_url || "/default-hotel.jpg"} // ✅ ใช้ค่าที่มี หรือ fallback
+                    alt={hotel.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
                 <CardContent className="p-4">
                   <h3 className="font-semibold text-lg">{hotel.name}</h3>
                   <p className="text-muted-foreground text-sm">{hotel.address}</p>
                   <div className="flex items-center gap-1 text-sm">
                     <Star className="h-4 w-4 fill-primary text-primary" />
-                    <span>{hotel.rating}</span>
-                    <span className="text-muted-foreground">({hotel.total_review} reviews)</span>
+                    <span>{hotel.rating || "N/A"}</span>
+                    <span className="text-muted-foreground">({hotel.total_review || 0} reviews)</span>
                   </div>
                   <div className="flex items-center gap-1 text-muted-foreground text-sm">
                     <MapPin className="h-3 w-3" />
-                    <span>{hotel.address}</span> {/* ✅ Updated to use `hotel.address` */}
+                    <span>{hotel.address}</span>
                   </div>
                 </CardContent>
                 <CardFooter className="p-4 pt-0 flex justify-between items-center">
                   <div>
-                    <span className="font-semibold text-lg">${hotel.price_per_night}</span> {/* ✅ Fixed price field */}
+                    <span className="font-semibold text-lg">${hotel.price_per_night || "N/A"}</span>
                     <span className="text-muted-foreground text-sm"> / night</span>
                   </div>
-                  <Button size="sm" asChild>
-                    <Link href={`/hotels/${hotel.id}`}>View Details</Link>
+                  <Button size="sm" onClick={() => handleViewDetails(hotel)}>
+                    View Details
                   </Button>
                 </CardFooter>
               </Card>
-            ))}
+            ))
+          ) : (
+            <div className="text-center py-12 col-span-full">
+              <h3 className="text-xl font-semibold mb-2">No verified pet hotels found</h3>
+              <p className="text-muted-foreground mb-4">Try adjusting your search criteria.</p>
+            </div>
+          )}
         </div>
-
-        {/* No Results Message */}
-        {hotels.length === 0 && (
-          <div className="text-center py-12">
-            <h3 className="text-xl font-semibold mb-2">No verified pet hotels found</h3>
-            <p className="text-muted-foreground mb-4">Try adjusting your search criteria.</p>
-          </div>
-        )}
       </div>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <DialogContent className="bg-[#D2C8BC] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>View Hotel Details</DialogTitle>
+            <DialogDescription>You are about to view details for {selectedHotel?.name}</DialogDescription>
+          </DialogHeader>
+
+          {selectedHotel && (
+            <div className="py-4">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-20 w-20 rounded-md overflow-hidden flex-shrink-0">
+                  <img
+                    src={selectedHotel.imgHotel || selectedHotel.image_url || "/default-hotel.jpg"}
+                    alt={selectedHotel.name}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="font-semibold">{selectedHotel.name}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedHotel.address}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge variant="outline" className="text-xs">
+                      ${selectedHotel.price_per_night || "N/A"} / night
+                    </Badge>
+                    <Badge variant="outline" className="text-xs flex items-center gap-1">
+                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                      {selectedHotel.rating || "N/A"}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-muted p-3 rounded-md flex items-start gap-2">
+                <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm">
+                  You'll be able to see detailed information about this pet hotel, including available rooms,
+                  facilities, and booking options.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex sm:justify-between">
+            <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirm}>Continue to Details</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }
+

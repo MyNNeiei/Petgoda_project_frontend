@@ -57,3 +57,80 @@ td {
     margin-bottom: 3%;
     margin-top: 3%;
 }
+
+/* General styles */
+main {
+    width: 100%;
+    overflow-x: hidden;
+  }
+  
+  .maintopic {
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  /* Responsive table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  th, td {
+    padding: 8px;
+    text-align: left;
+    white-space: nowrap; /* Prevent text wrapping */
+  }
+  
+  /* Ensure table scrolls horizontally on small screens */
+  .overflow-x-auto {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Sidebar adjustments */
+  #hs-sidebar-basic-usage {
+    z-index: 40;
+  }
+  
+  /* Media Queries */
+  @media (max-width: 768px) {
+    /* Stack tables vertically on small screens */
+    .grid {
+      grid-template-columns: 1fr !important; /* Override md:grid-cols-2 */
+    }
+  
+    /* Adjust padding and font sizes */
+    .p-6 {
+      padding: 1rem;
+    }
+  
+    .text-sm {
+      font-size: 0.875rem;
+    }
+  
+    th, td {
+      padding: 6px;
+    }
+  
+    /* Ensure inputs/selects are usable */
+    select, input {
+      min-width: 80px;
+      font-size: 0.75rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    /* Further adjustments for very small screens */
+    th, td {
+      font-size: 0.7rem;
+      padding: 4px;
+    }
+  
+    .maintopic {
+      font-size: 1rem;
+    }
+  
+    .h-\[450px\] {
+      height: 300px; /* Reduce table height on small screens */
+    }
+  }

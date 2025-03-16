@@ -13,7 +13,7 @@ export default function EditCreateRoomPage() {
   const { id } = useParams();
   const router = useRouter();
   const [hotel, setHotel] = useState(null);
-  const [mode, setMode] = useState("create"); // ตั้งค่าเริ่มต้นเป็น create
+  const [mode, setMode] = useState("create"); 
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
@@ -24,9 +24,16 @@ export default function EditCreateRoomPage() {
         const roomsResponse = await axiosInstance.get(`/api/hotels/${id}/rooms`);
 
         setHotel({ ...hotelResponse.data.hotel, rooms: roomsResponse.data });
-        setMode(id ? "edit" : "create");
+
+        // ✅ Fixing Mode Detection
+        if (roomsResponse.data.length > 0) {
+          setMode("edit");
+        } else {
+          setMode("create");
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
+        toast({ title: "Error", description: "Failed to fetch hotel details.", variant: "destructive" });
       } finally {
         setLoading(false);
       }
@@ -37,16 +44,29 @@ export default function EditCreateRoomPage() {
 
   const handleSave = async () => {
     try {
+      if (!hotel || !hotel.rooms || hotel.rooms.length === 0) {
+        toast({ title: "Error", description: "No room data available.", variant: "destructive" });
+        return;
+      }
+
+      const room = hotel.rooms[0]; // ✅ Assume we're editing/creating the first room
+
       if (mode === "create") {
-        console.log("this is sent info: ", hotel)
-        await axiosInstance.post(`/api/hotels/rooms/${id}/create`, hotel);
+        console.log("Creating Room: ", room);
+        await axiosInstance.post(`/api/hotels/rooms/${id}/create/`, room);
         toast({ title: "Room Created Successfully!" });
       } else {
-        await axiosInstance.put(`/api/hotels/rooms/${id}/update`, hotel);
+        console.log("Updating Room: ", room);
+        const roomWithId = {
+          ...room,
+          room_id: room.id // เพิ่ม room_id เข้าไปในข้อมูลที่ส่ง
+        };
+        console.log("Updating Room with ID:", roomWithId);
+        await axiosInstance.put(`/api/hotels/rooms/${id}/update/`, roomWithId);
         toast({ title: "Room Updated Successfully!" });
       }
 
-      router.push("/rooms");
+      router.push("/mainHotel/manage/");
     } catch (error) {
       console.error("Error saving room:", error);
       toast({ title: "Error", description: "Failed to save room.", variant: "destructive" });
@@ -67,13 +87,13 @@ export default function EditCreateRoomPage() {
       <Navbar />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold text-center mb-6">
-          {mode === "create" ? "CREATE" : "UPDATE"}
+          {mode === "create" ? "CREATE ROOM" : "UPDATE ROOM"}
         </h1>
 
         <RoomsTab hotel={hotel} setHotel={setHotel} />
 
         <div className="flex justify-between mt-6">
-          <Button variant="outline" onClick={() => router.push("/rooms")}>
+          <Button variant="outline" onClick={() => router.push("/mainHotel/manage/")}>
             Cancel
           </Button>
 

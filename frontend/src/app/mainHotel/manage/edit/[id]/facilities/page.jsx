@@ -5,25 +5,34 @@ import { useParams, useRouter } from "next/navigation"
 import axiosInstance from "@/utils/axios"
 import { Button } from "@/components/ui/button"
 import Navbar from "@/components/navbar/headernav"
-import { toast } from "@/hooks/use-toast"
-import { Loader2, Save, Building, BedDouble, Coffee } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { Loader2, Building, BedDouble, Coffee } from "lucide-react"
 import FacilitiesTab from "@/components/hotel-edit/facilities-tab"
 import Link from "next/link"
 
 export default function EditHotelFacilitiesPage() {
   const { id } = useParams()
   const router = useRouter()
+  const { toast } = useToast()
+
   const [hotel, setHotel] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [updating, setUpdating] = useState(false)
   const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchHotel = async () => {
       try {
-        if (!id) return
+        if (!id) {
+          setError("Hotel ID is missing")
+          return
+        }
 
         const response = await axiosInstance.get(`/api/hotels/${id}`)
+
+        if (!response.data || !response.data.hotel) {
+          throw new Error("Invalid response format")
+        }
+
         setHotel(response.data.hotel)
       } catch (err) {
         console.error("Error fetching hotel details:", err)
@@ -39,41 +48,13 @@ export default function EditHotelFacilitiesPage() {
     }
 
     fetchHotel()
-  }, [id])
-
-  const handleUpdateFacilities = async () => {
-    setUpdating(true)
-
-    try {
-      // Handle facilities separately
-      const facilitiesData = {
-        hotelId: id,
-        facilities: hotel.facilities,
-      }
-
-      await axiosInstance.put(`/api/hotels/facilities/update/${id}`, facilitiesData)
-
-      toast({
-        title: "Success",
-        description: "Hotel facilities updated successfully!",
-      })
-    } catch (err) {
-      console.error("Error updating facilities:", err)
-      toast({
-        title: "Error",
-        description: "Failed to update hotel facilities.",
-        variant: "destructive",
-      })
-    } finally {
-      setUpdating(false)
-    }
-  }
+  }, [id, toast])
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Loading hotel details...</p>
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+        <p>Loading hotel details...</p>
       </div>
     )
   }
@@ -81,8 +62,9 @@ export default function EditHotelFacilitiesPage() {
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md">
-          <p className="text-center">{error}</p>
+        <Navbar />
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive p-6 rounded-md mt-8">
+          <p className="text-center font-medium">{error}</p>
           <div className="mt-4 flex justify-center">
             <Button onClick={() => router.push("/mainHotel/manage/")}>Return to Hotel Management</Button>
           </div>
@@ -92,12 +74,12 @@ export default function EditHotelFacilitiesPage() {
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Edit Hotel Facilities</h1>
-          <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <h1 className="text-xl md:text-2xl font-bold">Edit Hotel Facilities</h1>
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" className="flex items-center gap-2" asChild>
               <Link href={`/mainHotel/manage/edit/${id}`}>
                 <Building className="h-4 w-4" />
@@ -120,25 +102,11 @@ export default function EditHotelFacilitiesPage() {
           </span>
         </div>
 
-        <FacilitiesTab hotel={hotel} setHotel={setHotel} />
+        {hotel && <FacilitiesTab hotel={hotel} setHotel={setHotel} />}
 
-        <div className="flex justify-between mt-6 pt-6 border-t">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mt-6 pt-6 border-t">
           <Button variant="outline" onClick={() => router.push("/mainHotel/manage/")}>
             Back to Hotels
-          </Button>
-
-          <Button onClick={handleUpdateFacilities} disabled={updating} className="flex items-center gap-2">
-            {updating ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Saving Facilities...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4" />
-                Save Facilities
-              </>
-            )}
           </Button>
         </div>
       </div>

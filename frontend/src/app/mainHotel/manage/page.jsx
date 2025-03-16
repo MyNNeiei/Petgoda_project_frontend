@@ -12,14 +12,44 @@ import { Edit, Trash2, Star, MapPin, Phone, Mail, Globe, Building, BedDouble, Co
 import { Badge } from "@/components/ui/badge"
 import Navbar from "@/components/navbar/headernav"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-
+import Link from "next/link"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 export default function ManageHotelsPage() {
   const router = useRouter()
   const [hotels, setHotels] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [deletingHotelId, setDeletingHotelId] = useState(null)
+  const [isStaff, setIsStaff] = useState(false)
 
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // ✅ Fetch logged-in user details
+        const userResponse = await axiosInstance.get("/api/users/me/");
+        const user = userResponse.data;
+
+        setIsStaff(user?.is_staff || false);
+
+        // ✅ Fetch Hotels Only if User is Staff
+        if (user?.is_staff) {
+          const hotelResponse = await axiosInstance.get("/api/hotels/");
+        }
+
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setError("Error fetching user data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+  
   const fetchHotels = async () => {
     try {
       setLoading(true)
@@ -50,6 +80,26 @@ export default function ManageHotelsPage() {
     fetchHotels()
   }, [])
 
+  if (!isStaff) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <main className="container mx-auto px-4 py-8">
+          <Alert variant="destructive" className="mb-6">
+            <AlertTitle>Access Denied</AlertTitle>
+            <AlertDescription>
+              This page is restricted to staff members only. If you believe you should have access, please contact an
+              administrator.
+            </AlertDescription>
+          </Alert>
+          <div className="flex justify-center mt-8">
+            <Button asChild>
+              <Link href="/">Return to Home</Link>
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
   const handleDelete = async (hotelId) => {
     // Confirm before deleting
     if (!window.confirm("Are you sure you want to delete this hotel? This action cannot be undone.")) {
@@ -149,7 +199,7 @@ export default function ManageHotelsPage() {
                       )}
                     </div>
                     <div className="md:w-2/3">
-                      <CardHeader>
+                      <CardHeader className="rounded-md">
                         <div className="flex justify-between items-start">
                           <div>
                             <CardTitle className="text-xl">{hotel.name}</CardTitle>
@@ -193,14 +243,14 @@ export default function ManageHotelsPage() {
                       </CardContent>
                       <CardFooter className="flex justify-between border-t pt-4">
                         <div className="flex gap-2">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                          <DropdownMenu className="bg-white">
+                            <DropdownMenuTrigger asChild className="bg-white">
                               <Button variant="outline" size="sm">
                                 <Edit className="h-4 w-4 mr-2" />
                                 Edit Hotel
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" className="w-56">
+                            <DropdownMenuContent align="start" className="w-56 bg-white">
                               <DropdownMenuItem onClick={() => navigateToEdit(hotel.id, "/")}>
                                 <Building className="h-4 w-4 mr-2" />
                                 <span>Edit Hotel Info</span>

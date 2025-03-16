@@ -1,81 +1,113 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Menu, User } from "lucide-react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Menu, User, Building } from "lucide-react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import axiosInstance from "@/utils/axios";
 
 export default function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [isStaff, setIsStaff] = useState(false)
-  const router = useRouter()
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isStaff, setIsStaff] = useState(false);
+  const [isHotelStaff, setIsHotelStaff] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    const user = JSON.parse(localStorage.getItem("user"))
+    const fetchUserData = async () => {
+      const token = localStorage.getItem("token");
 
-    if (token) {
-      setIsLoggedIn(true)
-      setIsStaff(user?.is_staff || false)
-    }
-  }, [])
+      if (!token) {
+        setIsLoggedIn(false);
+        return;
+      }
 
+      try {
+        const response = await axiosInstance.get("/api/user/", {
+          withCredentials: true,
+        });
+
+        const userData = response.data;
+        console.log("✅ User Data:", userData);
+
+        setIsLoggedIn(true);
+        setIsStaff(userData?.is_staff || false);
+        setIsHotelStaff(userData?.is_hotel_staff || false);
+        localStorage.setItem("user", JSON.stringify(userData));
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setIsLoggedIn(false);
+        setIsStaff(false);
+        setIsHotelStaff(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleLogout = async () => {
     try {
-      const res = await axiosInstance.post(
-        "api/logout/",
-        {},
-        {
-          withCredentials: true
-        }
-      );
+      await axiosInstance.post("/api/logout/", {}, { withCredentials: true });
 
-      // ลบข้อมูลออกจาก localStorage และอัพเดตสถานะ
-      if (res.status === 200) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        setIsLoggedIn(false);
-        setIsStaff(false);
-        router.refresh();
-        router.push("/")
-      }
-    } catch (error) {
-      console.log("Logout failed:", error);
-      console.log("Performing local logout despite API failure");
+      // Clear user data
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       setIsLoggedIn(false);
       setIsStaff(false);
-      router.push("/")
+      setIsHotelStaff(false);
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      console.log("Logout failed:", error);
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setIsLoggedIn(false);
+      setIsStaff(false);
+      setIsHotelStaff(false);
+      router.push("/");
       router.refresh();
     }
   };
-  
+
   const NavLinks = () => (
     <>
-      <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-      <Link href="/about" className="hover:text-primary transition-colors">About</Link>
-      <Link href="/hotels" className="hover:text-primary transition-colors">Hotels</Link>
-      <Link href="/contact" className="hover:text-primary transition-colors">Contact</Link>
+      <Link href="/" className="hover:text-primary transition-colors">
+        Home
+      </Link>
+      <Link href="/reservationhistory" className="hover:text-primary transition-colors">
+        History
+      </Link>
+      <Link href="/hotels" className="hover:text-primary transition-colors">
+        Hotels
+      </Link>
+      <Link href="/" className="hover:text-primary transition-colors">
+        Contact
+      </Link>
     </>
-  )
+  );
 
   const AuthLinks = () => (
     <>
       {isLoggedIn ? (
         <>
           {isStaff && (
-            <Link
-              href="/admin-dashboard"
-              className="inline-flex items-center justify-center rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 text-sm font-medium transition-colors"
-            >
-              Admin Dashboard
-            </Link>
+            <>
+              <Link
+                href="/adminPage"
+                className="inline-flex items-center justify-center rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 text-sm font-medium transition-colors"
+              >
+                Admin Dashboard
+              </Link>
+              <Link
+                href="/mainHotel/manage/"
+                className="inline-flex items-center justify-center rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 text-sm font-medium transition-colors"
+              >
+                <Building className="w-4 h-4 mr-2" />
+                Manage Hotels
+              </Link>
+            </>
           )}
           <Link
             href="/profile/"
@@ -97,7 +129,7 @@ export default function Navbar() {
         </Link>
       )}
     </>
-  )
+  );
 
   return (
     <nav className="bg-white flex items-center justify-between px-6 py-4 border-b">
@@ -120,7 +152,7 @@ export default function Navbar() {
             <span className="sr-only">Toggle menu</span>
           </Button>
         </DialogTrigger>
-        <DialogContent className="w-[300px] sm:w-[400px] bg-white p-0"> {/* Added bg-white */}
+        <DialogContent className="w-[300px] sm:w-[400px] bg-white p-0">
           <nav className="flex flex-col gap-4 p-6">
             <div className="flex flex-col space-y-4">
               <NavLinks />
@@ -132,5 +164,5 @@ export default function Navbar() {
         </DialogContent>
       </Dialog>
     </nav>
-  )
+  );
 }

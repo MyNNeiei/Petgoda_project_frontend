@@ -18,26 +18,34 @@ export default function LoginPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null); // Reset previous errors
-
+    
         try {
             const response = await axiosInstance.post("/api/login/", formData);
             const token = response.data.token;
+            
+            if (!token) {
+                throw new Error("No token received");
+            }
+    
             localStorage.setItem("token", token);
-            localStorage.setItem(
-                "user",
-                JSON.stringify({
-                    id: response.data.user_id, 
-                    username: response.data.username,
-                })
-            );
-            // ✅ Redirect to the profile page
-            router.push("/") // เปลี่ยนหน้าไปที่ /
+            localStorage.setItem("user", JSON.stringify({
+                id: response.data.user_id,
+                username: response.data.username,
+            }));
+    
+            // ✅ Ensure router is ready before pushing
             setTimeout(() => {
-                window.location.reload(); // รีเฟรชหน้า
-            }, 100); // ป้องกัน delay
-
+                router.replace("/");
+            }, 100); 
+    
+            // ✅ Alternative: Reload the window to ensure the auth state updates
+            setTimeout(() => {
+                window.location.reload();
+            }, 200);
+    
         } catch (err) {
-            setError(err.response?.data?.error || "Invalid login credentials.");
+            console.error("Login error:", err.response?.data || err.message);
+            setError(err.response?.data?.non_field_errors?.[0] || "Invalid login credentials.");
         }
     };
 

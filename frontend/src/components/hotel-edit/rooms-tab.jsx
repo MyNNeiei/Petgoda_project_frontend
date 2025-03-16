@@ -374,10 +374,6 @@ export default function RoomsTab({
                                 hotel={hotel}
                                 setHotel={setHotel}
                                 handleRemoveRoom={handleRemoveRoom}
-                                roomImagePreviews={roomImagePreviews}
-                                handleRoomImageChange={handleRoomImageChange}
-                                handleRemoveRoomImage={handleRemoveRoomImage}
-                                handleRoomImageDescriptionChange={handleRoomImageDescriptionChange}
                             />
                         ))}
                     </div>

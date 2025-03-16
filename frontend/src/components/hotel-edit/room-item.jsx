@@ -1,24 +1,31 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { Trash2, ImagePlus, X } from "lucide-react"
+import { Trash2, Info, Upload, X, FileText } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
-export default function RoomItem({
-  room,
-  index,
-  hotel,
-  setHotel,
-  handleRemoveRoom,
-  roomImagePreviews,
-  handleRoomImageChange,
-  handleRemoveRoomImage,
-  handleRoomImageDescriptionChange,
-}) {
+export default function RoomItem({ room, index, hotel, setHotel, handleRemoveRoom }) {
   const roomId = room.id || room.tempId
+
+  // Helper function to update room facilities
+  const updateFacility = (facilityKey, isChecked) => {
+    const updatedRooms = [...hotel.rooms]
+
+    // Initialize facilities object if it doesn't exist
+    if (!updatedRooms[index].facilities) {
+      updatedRooms[index].facilities = {}
+    }
+
+    updatedRooms[index].facilities = {
+      ...updatedRooms[index].facilities,
+      [facilityKey]: isChecked,
+    }
+
+    setHotel({ ...hotel, rooms: updatedRooms })
+  }
 
   return (
     <div className="border p-6 rounded-md relative">
@@ -117,8 +124,12 @@ export default function RoomItem({
                 }}
               >
                 <option value="available">Available</option>
-                <option value="booked">Booked</option>
+                <option value="partially_reserved">Partially Reserved</option>
+                <option value="fully_reserved">Fully Reserved</option>
+                <option value="partially_occupied">Partially Occupied</option>
+                <option value="fully_occupied">Fully Occupied</option>
                 <option value="maintenance">Under Maintenance</option>
+                <option value="unavailable">Unavailable</option>
               </select>
             </div>
 
@@ -210,185 +221,229 @@ export default function RoomItem({
           </div>
         </div>
 
-        {/* Room Amenities */}
+        {/* Room Facilities */}
         <div>
-          <h3 className="text-lg font-medium mb-3 pb-2 border-b">Room Amenities</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium mb-3 pb-2 border-b flex items-center">
+            Room Facilities
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 ml-2 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="w-[200px]">These facilities will be displayed to pet owners when booking</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="flex items-center space-x-2">
               <Checkbox
-                id={`has_ac_${roomId}`}
-                checked={room.amenities?.has_ac || false}
-                onCheckedChange={(checked) => {
-                  const updatedRooms = [...hotel.rooms]
-                  updatedRooms[index].amenities = {
-                    ...(updatedRooms[index].amenities || {}),
-                    has_ac: checked,
-                  }
-                  setHotel({ ...hotel, rooms: updatedRooms })
-                }}
+                id={`has_air_conditioning_${roomId}`}
+                checked={room.facilities?.has_air_conditioning || false}
+                onCheckedChange={(checked) => updateFacility("has_air_conditioning", checked)}
               />
-              <Label htmlFor={`has_ac_${roomId}`}>Air Conditioning</Label>
+              <Label htmlFor={`has_air_conditioning_${roomId}`}>Air Conditioning</Label>
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex items-center space-x-2">
               <Checkbox
-                id={`has_heating_${roomId}`}
-                checked={room.amenities?.has_heating || false}
-                onCheckedChange={(checked) => {
-                  const updatedRooms = [...hotel.rooms]
-                  updatedRooms[index].amenities = {
-                    ...(updatedRooms[index].amenities || {}),
-                    has_heating: checked,
-                  }
-                  setHotel({ ...hotel, rooms: updatedRooms })
-                }}
+                id={`has_cctv_${roomId}`}
+                checked={room.facilities?.has_cctv || false}
+                onCheckedChange={(checked) => updateFacility("has_cctv", checked)}
               />
-              <Label htmlFor={`has_heating_${roomId}`}>Heating</Label>
+              <Label htmlFor={`has_cctv_${roomId}`}>CCTV</Label>
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex items-center space-x-2">
               <Checkbox
-                id={`has_tv_${roomId}`}
-                checked={room.amenities?.has_tv || false}
-                onCheckedChange={(checked) => {
-                  const updatedRooms = [...hotel.rooms]
-                  updatedRooms[index].amenities = {
-                    ...(updatedRooms[index].amenities || {}),
-                    has_tv: checked,
-                  }
-                  setHotel({ ...hotel, rooms: updatedRooms })
-                }}
+                id={`has_webcam_monitoring_${roomId}`}
+                checked={room.facilities?.has_webcam_monitoring || false}
+                onCheckedChange={(checked) => updateFacility("has_webcam_monitoring", checked)}
               />
-              <Label htmlFor={`has_tv_${roomId}`}>TV</Label>
+              <Label htmlFor={`has_webcam_monitoring_${roomId}`}>Webcam Monitoring</Label>
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex items-center space-x-2">
               <Checkbox
-                id={`has_private_bathroom_${roomId}`}
-                checked={room.amenities?.has_private_bathroom || false}
-                onCheckedChange={(checked) => {
-                  const updatedRooms = [...hotel.rooms]
-                  updatedRooms[index].amenities = {
-                    ...(updatedRooms[index].amenities || {}),
-                    has_private_bathroom: checked,
-                  }
-                  setHotel({ ...hotel, rooms: updatedRooms })
-                }}
+                id={`has_pet_food_${roomId}`}
+                checked={room.facilities?.has_pet_food || false}
+                onCheckedChange={(checked) => updateFacility("has_pet_food", checked)}
               />
-              <Label htmlFor={`has_private_bathroom_${roomId}`}>Private Bathroom</Label>
+              <Label htmlFor={`has_pet_food_${roomId}`}>Pet Food</Label>
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex items-center space-x-2">
               <Checkbox
-                id={`has_pet_bed_${roomId}`}
-                checked={room.amenities?.has_pet_bed || false}
-                onCheckedChange={(checked) => {
-                  const updatedRooms = [...hotel.rooms]
-                  updatedRooms[index].amenities = {
-                    ...(updatedRooms[index].amenities || {}),
-                    has_pet_bed: checked,
-                  }
-                  setHotel({ ...hotel, rooms: updatedRooms })
-                }}
+                id={`has_toys_${roomId}`}
+                checked={room.facilities?.has_toys || false}
+                onCheckedChange={(checked) => updateFacility("has_toys", checked)}
               />
-              <Label htmlFor={`has_pet_bed_${roomId}`}>Pet Bed</Label>
+              <Label htmlFor={`has_toys_${roomId}`}>Toys</Label>
             </div>
-            <div className="flex items-center gap-2">
+
+            <div className="flex items-center space-x-2">
               <Checkbox
-                id={`has_food_water_bowls_${roomId}`}
-                checked={room.amenities?.has_food_water_bowls || false}
-                onCheckedChange={(checked) => {
-                  const updatedRooms = [...hotel.rooms]
-                  updatedRooms[index].amenities = {
-                    ...(updatedRooms[index].amenities || {}),
-                    has_food_water_bowls: checked,
-                  }
-                  setHotel({ ...hotel, rooms: updatedRooms })
-                }}
+                id={`has_private_space_${roomId}`}
+                checked={room.facilities?.has_private_space || false}
+                onCheckedChange={(checked) => updateFacility("has_private_space", checked)}
               />
-              <Label htmlFor={`has_food_water_bowls_${roomId}`}>Food/Water Bowls</Label>
+              <Label htmlFor={`has_private_space_${roomId}`}>Private Space</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id={`has_pet_bedding_${roomId}`}
+                checked={room.facilities?.has_pet_bedding || false}
+                onCheckedChange={(checked) => updateFacility("has_pet_bedding", checked)}
+              />
+              <Label htmlFor={`has_pet_bedding_${roomId}`}>Pet Bedding</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id={`has_soundproofing_${roomId}`}
+                checked={room.facilities?.has_soundproofing || false}
+                onCheckedChange={(checked) => updateFacility("has_soundproofing", checked)}
+              />
+              <Label htmlFor={`has_soundproofing_${roomId}`}>Soundproofing</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id={`has_water_dispenser_${roomId}`}
+                checked={room.facilities?.has_water_dispenser || false}
+                onCheckedChange={(checked) => updateFacility("has_water_dispenser", checked)}
+              />
+              <Label htmlFor={`has_water_dispenser_${roomId}`}>Water Dispenser</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id={`has_emergency_button_${roomId}`}
+                checked={room.facilities?.has_emergency_button || false}
+                onCheckedChange={(checked) => updateFacility("has_emergency_button", checked)}
+              />
+              <Label htmlFor={`has_emergency_button_${roomId}`}>Emergency Button</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id={`has_natural_light_${roomId}`}
+                checked={room.facilities?.has_natural_light || false}
+                onCheckedChange={(checked) => updateFacility("has_natural_light", checked)}
+              />
+              <Label htmlFor={`has_natural_light_${roomId}`}>Natural Light</Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id={`has_flexible_checkin_${roomId}`}
+                checked={room.facilities?.has_flexible_checkin || false}
+                onCheckedChange={(checked) => updateFacility("has_flexible_checkin", checked)}
+              />
+              <Label htmlFor={`has_flexible_checkin_${roomId}`}>Flexible Check-in</Label>
             </div>
           </div>
+
+          {/* Show selected facilities count */}
+          {room.facilities && (
+            <div className="mt-4 text-sm text-muted-foreground">
+              {Object.values(room.facilities).filter(Boolean).length} facilities selected
+            </div>
+          )}
         </div>
 
-        {/* Room Images Section */}
-        <div className="mt-4">
-          <h3 className="text-lg font-medium mb-3 pb-2 border-b">Room Images</h3>
-          <div className="flex justify-between items-center mb-2">
-            <p className="text-sm text-muted-foreground">Upload photos to showcase this room to potential guests</p>
-            <div className="relative">
-              <input
-                type="file"
-                id={`room-images-${roomId}`}
-                accept="image/*"
-                multiple
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                onChange={(e) => handleRoomImageChange(e, roomId)}
-              />
-              <Button type="button" variant="outline" size="sm" className="flex items-center gap-1">
-                <ImagePlus className="h-4 w-4" />
-                Add Images
-              </Button>
-            </div>
-          </div>
-
-          {/* Display existing room images */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
-            {/* {roomImagePreviews[roomId]?.map((image, imgIndex) => (
-              <div key={imgIndex} className="relative border rounded-md p-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 h-6 w-6 bg-white/80 hover:bg-white text-red-500 rounded-full z-10"
-                  onClick={() => handleRemoveRoomImage(roomId, imgIndex, image.id !== undefined)}
-                >
-                  <X className="h-4 w-4" />
-                  <span className="sr-only">Remove image</span>
-                </Button>
-
-                <div className="aspect-video overflow-hidden rounded-md mb-2">
-                  <img
-                    src={image.url || "/placeholder.svg"}
-                    alt={`Room ${room.roomname} image ${imgIndex + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                <div className="mt-1">
-                  <Input
-                    type="text"
-                    placeholder="Image description"
-                    value={image.description || ""}
-                    onChange={(e) =>
-                      handleRoomImageDescriptionChange(roomId, imgIndex, e.target.value, image.id !== undefined)
-                    }
-                    className="text-xs"
-                  />
-                </div>
-              </div>
-            ))} */}
-
-            {/* {(!roomImagePreviews[roomId] || roomImagePreviews[roomId].length === 0) && (
-              <div className="col-span-full text-center py-8 border rounded-md border-dashed text-muted-foreground">
-                No images added yet. Click "Add Images" to upload room photos.
-              </div>
-            )} */}
-          </div>
-        </div>
-
-        {/* Additional Notes */}
+        {/* Amenities Attachment */}
         <div>
-          <h3 className="text-lg font-medium mb-3 pb-2 border-b">Additional Notes</h3>
-          <div className="grid gap-2">
-            <Label htmlFor={`room-notes-${roomId}`}>Notes (Internal use only)</Label>
-            <Textarea
-              id={`room-notes-${roomId}`}
-              rows={3}
-              value={room.notes || ""}
-              onChange={(e) => {
-                const updatedRooms = [...hotel.rooms]
-                updatedRooms[index].notes = e.target.value
-                setHotel({ ...hotel, rooms: updatedRooms })
-              }}
-              placeholder="Add any special notes about this room (not visible to guests)"
-            />
+          <h3 className="text-lg font-medium mb-3 pb-2 border-b flex items-center">
+            Amenities Attachment
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 ml-2 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="w-[200px]">Upload a document with detailed amenities information</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </h3>
+
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id={`has_amenities_attachment_${roomId}`}
+                checked={!!room.amenitiesAttachment}
+                onCheckedChange={(checked) => {
+                  if (!checked) {
+                    // If unchecked, remove the attachment
+                    const updatedRooms = [...hotel.rooms]
+                    updatedRooms[index].amenitiesAttachment = null
+                    setHotel({ ...hotel, rooms: updatedRooms })
+                  }
+                }}
+              />
+              <Label htmlFor={`has_amenities_attachment_${roomId}`}>Include Amenities Document</Label>
+            </div>
+
+            {!!room.amenitiesAttachment && (
+              <div className="mt-2">
+                {typeof room.amenitiesAttachment === "string" ? (
+                  // Display existing attachment
+                  <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/50">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm truncate flex-1">
+                      {room.amenitiesAttachment.split("/").pop() || "Attached Document"}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const updatedRooms = [...hotel.rooms]
+                        updatedRooms[index].amenitiesAttachment = null
+                        setHotel({ ...hotel, rooms: updatedRooms })
+                      }}
+                      className="h-8 w-8 p-0"
+                    >
+                      <X className="h-4 w-4" />
+                      <span className="sr-only">Remove file</span>
+                    </Button>
+                  </div>
+                ) : (
+                  // File upload input
+                  <div className="grid w-full max-w-sm items-center gap-1.5">
+                    <Label
+                      htmlFor={`amenities-attachment-${roomId}`}
+                      className="flex items-center justify-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-primary focus:outline-none"
+                    >
+                      <div className="flex flex-col items-center space-y-2">
+                        <Upload className="w-6 h-6 text-muted-foreground" />
+                        <span className="font-medium text-sm text-muted-foreground">
+                          Click to upload amenities document
+                        </span>
+                        <span className="text-xs text-muted-foreground">PDF, DOC, DOCX up to 10MB</span>
+                      </div>
+                      <Input
+                        id={`amenities-attachment-${roomId}`}
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            const updatedRooms = [...hotel.rooms]
+                            updatedRooms[index].amenitiesAttachment = file
+                            setHotel({ ...hotel, rooms: updatedRooms })
+                          }
+                        }}
+                      />
+                    </Label>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
