@@ -26,8 +26,8 @@
 <h3>How to Run the Website</h3>
 <hr>
 <h3>1. ติดตั้ง Frontend Dependencies</h3>
-```cd frontend
-    npm install
+```- cd frontend <br>
+  - npm install
 ```
 <h3>2. Run the Frontend (ต้องอยู่ใน Folder frontend)</h3>
 ```
