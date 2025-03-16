@@ -24,3 +24,22 @@
 </ul>
 
 <h3>How to Run the Website</h3>
+<hr>
+<h3>1. ติดตั้ง Frontend Dependencies</h3>
+```cd frontend
+    npm install
+```
+<h3>2. Run the Frontend (ต้องอยู่ใน Folder frontend)</h3>
+```
+    npm run dev
+```
+<h3>3. ข้อมูล User เผื่อทดสอบ (สำหรับอาจารย์)</h3>
+```
+    <h5>Userทั่วไป :</h5> 
+    - username : it65070023
+    - password : NNnam11234
+    <h5>UserAdmin</h5> 
+    - username : NNnam1_
+    - password : NNnam11234
+    ปล. หากอาจารย์ต้องการสร้างaccount เองสามารถ สร้างและ login ได้
+```
