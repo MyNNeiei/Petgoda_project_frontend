@@ -198,7 +198,7 @@ const DataTable = () => {
             <li>
               <a
                 className="flex items-center gap-x-3 py-2 px-2.5 bg-gray-100 text-sm text-gray-700 rounded-lg hover:bg-gray-200 dark:bg-neutral-700 dark:text-white"
-                href="#"
+                href="/"
               >
                 <HomeIcon className="w-6 h-6" />
                 Dashboard
